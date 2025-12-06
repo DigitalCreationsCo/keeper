@@ -109,8 +109,8 @@ echo "\`\`\`" >> "$TASK_FILE"
 
 if [ "$TRIGGER_MODE" = "interactive" ]; then
     echo ""
-    echo " Keeper has prepared a documentation update task"
-    echo "📂 Task file: $TASK_FILE"
+    echo " Keeper: Task created"
+    echo "📂: $TASK_FILE"
     sleep 1
     echo ""
     echo "Call your agent as follows:"
