@@ -40,13 +40,15 @@ else
 fi
 
 # Get the full list of changed files
-ALL_CHANGED_FILES=(empty.js)
+ALL_CHANGED_FILES=(install.sh)
 
 # Filter out excluded files
 FILES_TO_PROCESS=()
 for file in ""; do
     is_excluded=false
     for pattern in ""; do
+        if [ -z "" ]; then continue; fi
+
         if [[ "" ==  ]]; then
             is_excluded=true
             break
@@ -70,14 +72,19 @@ for file in ""; do
 done
 
 # Get a diff of only the files to be processed
-DIFF=diff --git a/empty.js b/empty.js
-new file mode 100644
-index 0000000..6be7d34
---- /dev/null
-+++ b/empty.js
-@@ -0,0 +1 @@
-+// a test file
-\ No newline at end of file
+DIFF=diff --git a/install.sh b/install.sh
+index 031402f..1143dda 100755
+--- a/install.sh
++++ b/install.sh
+@@ -72,6 +72,8 @@ FILES_TO_PROCESS=()
+ for file in "${ALL_CHANGED_FILES[@]}"; do
+     is_excluded=false
+     for pattern in "${EXCLUDE_PATTERNS[@]}"; do
++        if [ -z "$pattern" ]; then continue; fi
++
+         if [[ "$file" == $pattern ]]; then
+             is_excluded=true
+             break
 if [ -z "" ]; then
     exit 0
 fi
@@ -175,7 +182,7 @@ if [ "" = "auto" ]; then
 
     if [ "" = "true" ]; then
         # Get files changed by the agent
-        AGENT_CHANGED_FILES=(empty.js)
+        AGENT_CHANGED_FILES=(install.sh)
         CHANGED_FILES_BY_AGENT=0
 
         if [ "" -gt 0 ]; then
