@@ -72,6 +72,8 @@ FILES_TO_PROCESS=()
 for file in "${ALL_CHANGED_FILES[@]}"; do
     is_excluded=false
     for pattern in "${EXCLUDE_PATTERNS[@]}"; do
+        if [ -z "$pattern" ]; then continue; fi
+
         if [[ "$file" == $pattern ]]; then
             is_excluded=true
             break
