@@ -200,7 +200,8 @@ cat > "$CONFIG_FILE" << 'CONFIG_EOF'
   "exclude": [
     ".keeper/*",
     "*.lock",
-    "package.json"
+    "package.json",
+    ".gitignore"
   ]
 }
 CONFIG_EOF

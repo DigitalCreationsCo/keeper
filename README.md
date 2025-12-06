@@ -37,20 +37,3 @@ To get the latest version, you can use the following command:
 ```bash
 curl -fsSL https://github.com/digitalcreationsco/keeper/releases/latest/download/install.sh | bash
 ```
-
-### Custom Domain (Optional)
-
-If you want `dockeeper.dev`:
-
-1. Buy domain from any registrar
-2. Add `CNAME` file to `/docs`:
-
-```
-dockeeper.dev
-```
-
-3. Configure DNS:
-
-```
-CNAME: dockeeper.dev → username.github.io
-```
