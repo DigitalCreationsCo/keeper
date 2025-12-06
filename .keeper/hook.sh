@@ -7,12 +7,15 @@ TASK_FILE="$KEEPER_DIR/agent-task.md"
 CONFIG_FILE="$KEEPER_DIR/config.json"
 TEMPLATE_FILE="$KEEPER_DIR/prompt-template.md"
 
+echo "DEBUG: CONFIG_FILE path is $CONFIG_FILE" # ADDED DEBUG
+echo "DEBUG: Does config.json exist? $([ -f "$CONFIG_FILE" ] && echo "yes" || echo "no")" # ADDED DEBUG
+
 if [ -f "$CONFIG_FILE" ]; then
     TRIGGER_MODE=$(jq -r ".trigger_mode // \"auto\"" "$CONFIG_FILE")
     AUTO_COMMIT=$(jq -r ".auto_commit // true" "$CONFIG_FILE")
     AGENT_NAME=$(jq -r ".agent // \"cline\"" "$CONFIG_FILE")
     AGENT_COMMAND_OVERRIDE=$(jq -r ".agent_command // \"\"" "$CONFIG_FILE")
-    echo "DEBUG: AUTO_COMMIT is $AUTO_COMMIT" # ADDED DEBUG
+    echo "DEBUG: AUTO_COMMIT is $AUTO_COMMIT" # Existing DEBUG
     
     FILES_TO_UPDATE=()
     while IFS= read -r line; do
@@ -74,12 +77,12 @@ else
     COMMIT_INSTRUCTION="The documentation files have been updated. Please review and commit them."
 fi
 
-echo "DEBUG: PROMPT_TEMPLATE content starts here:" # ADDED DEBUG
-cat "$TEMPLATE_FILE" # ADDED DEBUG
-echo "DEBUG: PROMPT_TEMPLATE content ends here." # ADDED DEBUG
-echo "DEBUG: COMMIT_INSTRUCTION is $COMMIT_INSTRUCTION" # ADDED DEBUG
+echo "DEBUG: PROMPT_TEMPLATE content starts here:" # Existing DEBUG
+cat "$TEMPLATE_FILE" # Existing DEBUG
+echo "DEBUG: PROMPT_TEMPLATE content ends here." # Existing DEBUG
+echo "DEBUG: COMMIT_INSTRUCTION is $COMMIT_INSTRUCTION" # Existing DEBUG
 PROMPT_TEMPLATE=$(cat "$TEMPLATE_FILE")
-TASK_CONTENT=$(echo "$PROMPT_TEMPLATE" | sed "s/{{COMMIT_INSTRUCTION}}/$COMMIT_INSTRUCTION/g")
+TASK_CONTENT=$(echo "$PROMPT_TEMPLATE" | sed "s#{{COMMIT_INSTRUCTION}}#$COMMIT_INSTRUCTION#g") # CHANGED DELIMITER
 TASK_CONTENT=$(echo "$TASK_CONTENT" | sed "s|{{FILES_TO_UPDATE}}|${FILES_TO_UPDATE[*]}|g")
 
 echo "$TASK_CONTENT" > "$TASK_FILE"
@@ -107,13 +110,13 @@ if [ "$TRIGGER_MODE" = "interactive" ]; then
     echo ""
     case "$AGENT_NAME" in
         "cline")
-            echo "  cline -m act \'Read and complete the task in $TASK_FILE\'"
+            echo "  cline -m act \'Read and complete the task in $TASK_FILE\''"
             ;;
         "aider")
-            echo "  aider \'Read and complete the task in $TASK_FILE\'"
+            echo "  aider \'Read and complete the task in $TASK_FILE\''"
             ;;
         "claude")
-            echo "  claude \'Read and complete the task in $TASK_FILE\'"
+            echo "  claude \'Read and complete the task in $TASK_FILE\''"
             ;;
         *)
             echo "  Please ask your coding agent to read and complete the task in $TASK_FILE"
