@@ -125,7 +125,7 @@ if [ "$TRIGGER_MODE" = "interactive" ]; then
     echo ""
     case "$AGENT_NAME" in
         "cline")
-            echo "  cline 'Read and complete the task in $TASK_FILE'"
+            echo "  cline -m act 'Read and complete the task in $TASK_FILE'"
             ;;
         "aider")
             echo "  aider 'Read and complete the task in $TASK_FILE'"
