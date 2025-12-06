@@ -32,14 +32,14 @@ install.sh
 ## Code Changes:
 ```diff
 diff --git a/install.sh b/install.sh
-index 473d481..8262c15 100755
+index 8262c15..473d481 100755
 --- a/install.sh
 +++ b/install.sh
-@@ -2,6 +2,7 @@
+@@ -2,7 +2,6 @@
  # Keeper Installer
  # Usage: curl -fsSL https://keeper.dev/install.sh | bash
  
-+# adding arbitrary comment for changes
+-# adding arbitrary comment for changes
  set -e
  
  echo "📚 Installing Keeper..."
