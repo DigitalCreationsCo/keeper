@@ -35,7 +35,9 @@ TEMPLATE_FILE="$KEEPER_DIR/prompt-template.md"
 if [ -f "$CONFIG_FILE" ]; then
     TRIGGER_MODE=$(jq -r '.trigger_mode // "auto"' "$CONFIG_FILE")
     AUTO_COMMIT=$(jq -r '.auto_commit // true' "$CONFIG_FILE")
-    
+    AGENT_NAME=$(jq -r '.agent // "cline"' "$CONFIG_FILE")
+    AGENT_COMMAND_OVERRIDE=$(jq -r '.agent_command // ""' "$CONFIG_FILE")
+
     FILES_TO_UPDATE=()
     while IFS= read -r line; do
         FILES_TO_UPDATE+=("$line")
@@ -48,14 +50,18 @@ if [ -f "$CONFIG_FILE" ]; then
 else
     TRIGGER_MODE="auto"
     AUTO_COMMIT="true"
+    AGENT_NAME="cline"
+    AGENT_COMMAND_OVERRIDE=""
     FILES_TO_UPDATE=("README.md" "docs/")
     EXCLUDE_PATTERNS=(".keeper/*" "keeper/*")
 fi
 
-CHANGED_FILES_LIST=($(git diff HEAD~1 HEAD --name-only))
+# Get the full list of changed files
+ALL_CHANGED_FILES=($(git diff HEAD~1 HEAD --name-only))
 
+# Filter out excluded files
 FILES_TO_PROCESS=()
-for file in "${CHANGED_FILES_LIST[@]}"; do
+for file in "${ALL_CHANGED_FILES[@]}"; do
     is_excluded=false
     for pattern in "${EXCLUDE_PATTERNS[@]}"; do
         if [[ "$file" == $pattern ]]; then
@@ -68,16 +74,18 @@ for file in "${CHANGED_FILES_LIST[@]}"; do
     fi
 done
 
+# If no files are left to process, exit
 if [ ${#FILES_TO_PROCESS[@]} -eq 0 ]; then
-    echo " Keeper: All changed files are in the exclude list. Skipping."
+    echo "Keeper: All changed files are in the exclude list. Skipping."
     exit 0
 fi
 
-echo " Keeper: Processing files:"
+echo "Keeper: Processing the following files:"
 for file in "${FILES_TO_PROCESS[@]}"; do
     echo "- $file"
 done
 
+# Get a diff of only the files to be processed
 DIFF=$(git diff HEAD~1 HEAD -- "${FILES_TO_PROCESS[@]}")
 if [ -z "$DIFF" ]; then
     exit 0
@@ -93,14 +101,12 @@ PROMPT_TEMPLATE=$(cat "$TEMPLATE_FILE")
 TASK_CONTENT=$(echo "$PROMPT_TEMPLATE" | sed "s/{{COMMIT_INSTRUCTION}}/$COMMIT_INSTRUCTION/g")
 TASK_CONTENT=$(echo "$TASK_CONTENT" | sed "s|{{FILES_TO_UPDATE}}|${FILES_TO_UPDATE[*]}|g")
 
-# Generate agent task
 echo "$TASK_CONTENT" > "$TASK_FILE"
 
-# Append dynamic content to the task file
 echo "" >> "$TASK_FILE"
 echo "## Changed Files" >> "$TASK_FILE"
 echo "\`\`\`" >> "$TASK_FILE"
-echo "${CHANGED_FILES_LIST[*]}" >> "$TASK_FILE"
+echo "${FILES_TO_PROCESS[*]}" >> "$TASK_FILE"
 echo "\`\`\`" >> "$TASK_FILE"
 echo "" >> "$TASK_FILE"
 echo "## Code Changes:" >> "$TASK_FILE"
@@ -113,11 +119,24 @@ chmod +x $TASK_FILE
 if [ "$TRIGGER_MODE" = "interactive" ]; then
     echo ""
     echo " Keeper has prepared a documentation update task"
-    echo ""
     echo "📂: $TASK_FILE"
     echo ""
-    echo "Please ask your coding agent (Claude Code, Copilot, Cline, etc.):"
-    echo "  'Read and complete the task in $TASK_FILE'"
+    echo "Call your agent as follows:"
+    echo ""
+    case "$AGENT_NAME" in
+        "cline")
+            echo "  cline 'Read and complete the task in $TASK_FILE'"
+            ;;
+        "aider")
+            echo "  aider 'Read and complete the task in $TASK_FILE'"
+            ;;
+        "claude")
+            echo "  claude 'Read and complete the task in $TASK_FILE'"
+            ;;
+        *)
+            echo "  Please ask your coding agent to read and complete the task in $TASK_FILE"
+            ;;
+    esac
     echo ""
     echo "After the agent responds, it will update your docs automatically."
     echo ""
@@ -127,17 +146,40 @@ if [ "$TRIGGER_MODE" = "interactive" ]; then
 fi
 
 if [ "$TRIGGER_MODE" = "auto" ]; then
+    AGENT_COMMAND=""
+    if [ -n "$AGENT_COMMAND_OVERRIDE" ]; then
+        AGENT_COMMAND="$AGENT_COMMAND_OVERRIDE"
+    else
+        case "$AGENT_NAME" in
+            "cline")
+                AGENT_COMMAND="cat {{TASK_FILE}} | cline --yolo"
+                ;;
+            "aider")
+                AGENT_COMMAND="aider {{TASK_FILE}}"
+                ;;
+            "claude")
+                AGENT_COMMAND="claude {{TASK_FILE}}"
+                ;;
+            *)
+                echo "Keeper: Unknown agent '$AGENT_NAME'. Please configure 'agent_command' in your config.json."
+                exit 1
+                ;;
+        esac
+    fi
+
+    FINAL_COMMAND=$(echo "$AGENT_COMMAND" | sed "s/{{TASK_FILE}}/$TASK_FILE/g")
+
     echo ""
-    echo " Keeper is calling the AI agent. Please wait, this may take a few moments..."
+    echo " Keeper is calling the AI agent '$AGENT_NAME'. Please wait, this may take a few moments..."
     echo ""
-    cat "$TASK_FILE" | cline --yolo
+    eval "$FINAL_COMMAND"
     echo ""
 
-    # Check the agent's commit and report
-    CHANGED_FILES_BY_AGENT=$(git diff HEAD~1 HEAD --name-only | wc -l)
-    
-    if [ "$CHANGED_FILES_BY_AGENT" -gt 0 ]; then
-        echo " Keeper updated $CHANGED_FILES_BY_AGENT documentation file(s)"
+    if [ "$AUTO_COMMIT" = "true" ]; then
+        CHANGED_FILES_BY_AGENT=$(git diff HEAD~1 HEAD --name-only | wc -l)
+        if [ "$CHANGED_FILES_BY_AGENT" -gt 0 ]; then
+            echo " Keeper updated $CHANGED_FILES_BY_AGENT documentation file(s)"
+        fi
     fi
     exit 0
 fi
@@ -145,15 +187,16 @@ HOOK_EOF
 
 cat > "$CONFIG_FILE" << 'CONFIG_EOF'
 {
-  "trigger_mode": "auto",
-  "auto_commit": false,
+  "trigger_mode": "interactive",
+  "auto_commit": true,
+  "agent": "cline",
+  "agent_command": "",
   "files_to_update": [
     "README.md",
     "docs/"
   ],
   "exclude": [
     ".keeper/*",
-    "keeper/*",
     "*.lock",
     "package.json"
   ]
@@ -197,15 +240,16 @@ Agent-powered documentation that stays in sync with your code.
 ## Configuration
 
 Edit `$CONFIG_FILE` to customize:
-
-- `trigger_mode`: "auto" (notify only) or "auto" (call agent)
-- `auto_commit`: Auto-commit doc changes
-- `files_to_update`: Which docs to maintain
+- `trigger_mode`: "auto" or "interactive".
+- `auto_commit`: `true` or `false`.
+- `agent`: The name of your preferred coding agent. Supported agents: `cline`, `aider`, `claude`.
+- `agent_command` (optional): Provide a custom command to run your agent. Use `{{TASK_FILE}}` as a placeholder for the task file path.
+- `files_to_update`: A list of documentation files and directories to keep updated.
 - `exclude`: A list of file patterns to ignore.
 
 ## Usage
 
-After committing code, Keeper creates a task file. Ask your agent to read and complete the task in `.keeper/agent-task.md`.
+After committing code, Keeper creates a task file and (in `auto` mode) calls your configured AI agent.
 README_EOF
 
 chmod +x .keeper/hook.sh

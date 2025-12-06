@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keeper - Agent-Powered Documentation</title>
+    <meta name="description" content="Keep your documentation in sync with your code using any AI coding agent">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 60px 20px;
+            color: white;
+        }
+
+        .logo {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .tagline {
+            font-size: 1.5rem;
+            opacity: 0.95;
+            margin-bottom: 40px;
+        }
+
+        .install-section {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            margin-bottom: 40px;
+        }
+
+        .install-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .command-box {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 16px;
+            position: relative;
+            margin-bottom: 15px;
+            overflow-x: auto;
+        }
+
+        .command-box code {
+            display: block;
+            white-space: nowrap;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .copy-btn.copied {
+            background: #10b981;
+        }
+
+        .version-badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .feature-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .feature-card h3 {
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+
+        .feature-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .how-it-works {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 40px;
+        }
+
+        .how-it-works h2 {
+            font-size: 2rem;
+            margin-bottom: 30px;
+            color: #667eea;
+            text-align: center;
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+        }
+
+        .step {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0 auto 20px;
+        }
+
+        .step h4 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .step p {
+            color: #666;
+        }
+
+        .agents-section {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 40px;
+        }
+
+        .agents-section h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: #667eea;
+            text-align: center;
+        }
+
+        .agents-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .agent-badge {
+            background: #f3f4f6;
+            padding: 12px 24px;
+            border-radius: 24px;
+            font-weight: 500;
+            color: #374151;
+            border: 2px solid #e5e7eb;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: white;
+        }
+
+        footer a {
+            color: white;
+            text-decoration: none;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            transition: border-color 0.2s;
+        }
+
+        footer a:hover {
+            border-bottom-color: white;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .tagline {
+                font-size: 1.2rem;
+            }
+
+            .command-box {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">📚</div>
+            <h1>Keeper</h1>
+            <p class="tagline">Keep your documentation in sync with your code</p>
+        </header>
+
+        <div class="install-section">
+            <h2 class="install-title">Quick Install <span class="version-badge">v1.0.0</span></h2>
+            <div class="command-box">
+                <code
+                    id="install-command">curl -fsSL https://github.com/digitalcreationsco/keeper/releases/latest/download/install.sh | bash</code>
+                <button class="copy-btn" onclick="copyInstallCommand()">Copy</button>
+            </div>
+            <p style="color: #666; font-size: 14px; margin-top: 10px;">
+                💡 Run this command in your git repository root directory
+            </p>
+        </div>
+
+        <div class="features">
+            <div class="feature-card">
+                <div class="feature-icon">🤖</div>
+                <h3>Agent-Powered</h3>
+                <p>Works with any AI coding agent you already use - Claude Code, GitHub Copilot, Cline, Cursor, and
+                    more.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🌍</div>
+                <h3>Language Agnostic</h3>
+                <p>Supports JavaScript, Python, Go, Rust, or any programming language. If git tracks it, Keeper works
+                    with it.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Zero Config</h3>
+                <p>Works out of the box with sensible defaults. Customize later if needed with simple JSON
+                    configuration.</p>
+            </div>
+        </div>
+
+        <div class="how-it-works">
+            <h2>How It Works</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h4>Commit Code</h4>
+                    <p>Make your code changes and commit as usual. Git hook triggers automatically.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h4>Task Generated</h4>
+                    <p>Keeper analyzes changes and creates a structured task file for your agent.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h4>Agent Updates</h4>
+                    <p>Ask your coding agent to complete the task. It updates your docs automatically.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <h4>Stay Synced</h4>
+                    <p>Commit the updated docs. Your documentation stays fresh with every change.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="agents-section">
+            <h2>Works With Your Favorite Agent</h2>
+            <p style="text-align: center; color: #666; margin-bottom: 20px;">
+                Keeper uses a simple file-based protocol that any coding agent can understand
+            </p>
+            <div class="agents-grid">
+                <div class="agent-badge">🤖 Claude Code</div>
+                <div class="agent-badge">💬 GitHub Copilot</div>
+                <div class="agent-badge">🔧 Cline</div>
+                <div class="agent-badge">⚡ Cursor</div>
+                <div class="agent-badge">➡️ Continue.dev</div>
+                <div class="agent-badge">🎯 Aider</div>
+                <div class="agent-badge">✨ Your Custom Agent</div>
+            </div>
+        </div>
+
+        <div class="how-it-works">
+            <h2>Example Usage</h2>
+            <div class="command-box" style="margin-bottom: 20px;">
+                <code># Make changes to your code
+git add .
+git commit -m "feat: add user authentication"
+
+ Keeper: Task created at .keeper/agent-request.md
+
+# Ask your agent to complete the task
+claude code "Complete the task in .keeper/agent-request.md"
+
+✅ Documentation updated!
+
+# Commit the docs
+git add README.md
+git commit -m "docs: update authentication section"</code>
+            </div>
+        </div>
+
+        <footer>
+            <p>
+                Open source on <a href="https://github.com/digitalcreationsco/keeper" target="_blank">GitHub</a>
+                • Made with 💜 for developers who love good docs
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        function copyInstallCommand() {
+            const command = document.getElementById('install-command').textContent;
+            const btn = document.querySelector('.copy-btn');
+
+            navigator.clipboard.writeText(command).then(() => {
+                btn.textContent = 'Copied!';
+                btn.classList.add('copied');
+
+                setTimeout(() => {
+                    btn.textContent = 'Copy';
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+
+</html>
