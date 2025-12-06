@@ -22,7 +22,7 @@ KEEPER_README_FILE="$KEEPER_DIR/README.md"
 # Download core files
 echo "⬇️  Downloading files..."
 
-cat > .keeper/hook.sh << 'HOOK_EOF'
+cat > .keeper/hook.sh << EOF
 #!/bin/bash
 # Keeper Git Hook
 
@@ -32,15 +32,18 @@ TASK_FILE="$KEEPER_DIR/agent-task.md"
 CONFIG_FILE="$KEEPER_DIR/config.json"
 TEMPLATE_FILE="$KEEPER_DIR/prompt-template.md"
 
-echo "DEBUG: CONFIG_FILE path is $CONFIG_FILE" # ADDED DEBUG
-echo "DEBUG: Does config.json exist? $([ -f "$CONFIG_FILE" ] && echo "yes" || echo "no")" # ADDED DEBUG
-
 if [ -f "$CONFIG_FILE" ]; then
     TRIGGER_MODE=$(jq -r ".trigger_mode // \"auto\"" "$CONFIG_FILE")
     AUTO_COMMIT=$(jq -r ".auto_commit // true" "$CONFIG_FILE")
     AGENT_NAME=$(jq -r ".agent // \"cline\"" "$CONFIG_FILE")
     AGENT_COMMAND_OVERRIDE=$(jq -r ".agent_command // \"\"" "$CONFIG_FILE")
-    echo "DEBUG: AUTO_COMMIT is $AUTO_COMMIT" # Existing DEBUG
+    DEBUG_MODE=$(jq -r ".debug // false" "$CONFIG_FILE")
+
+    if [ "$DEBUG_MODE" = "true" ]; then # ADDED
+        echo "DEBUG: CONFIG_FILE path is $CONFIG_FILE"
+        echo "DEBUG: Does config.json exist? $([ -f "$CONFIG_FILE" ] && echo "yes" || echo "no")"
+        echo "DEBUG: AUTO_COMMIT is $AUTO_COMMIT"
+    fi # ADDED
     
     FILES_TO_UPDATE=()
     while IFS= read -r line; do
@@ -56,6 +59,7 @@ else
     AUTO_COMMIT="true"
     AGENT_NAME="cline"
     AGENT_COMMAND_OVERRIDE=""
+    DEBUG_MODE="false"
     FILES_TO_UPDATE=("README.md" "docs/")
     EXCLUDE_PATTERNS=(".keeper/*" "keeper/*")
 fi
@@ -102,10 +106,12 @@ else
     COMMIT_INSTRUCTION="The documentation files have been updated. Please review and commit them."
 fi
 
-echo "DEBUG: PROMPT_TEMPLATE content starts here:" # Existing DEBUG
-cat "$TEMPLATE_FILE" # Existing DEBUG
-echo "DEBUG: PROMPT_TEMPLATE content ends here." # Existing DEBUG
-echo "DEBUG: COMMIT_INSTRUCTION is $COMMIT_INSTRUCTION" # Existing DEBUG
+if [ "$DEBUG_MODE" = "true" ]; then # ADDED
+    echo "DEBUG: PROMPT_TEMPLATE content starts here:"
+    cat "$TEMPLATE_FILE"
+    echo "DEBUG: PROMPT_TEMPLATE content ends here."
+    echo "DEBUG: COMMIT_INSTRUCTION is $COMMIT_INSTRUCTION"
+fi # ADDED
 PROMPT_TEMPLATE=$(cat "$TEMPLATE_FILE")
 TASK_CONTENT=$(echo "$PROMPT_TEMPLATE" | sed "s#{{COMMIT_INSTRUCTION}}#$COMMIT_INSTRUCTION#g") # CHANGED DELIMITER
 TASK_CONTENT=$(echo "$TASK_CONTENT" | sed "s|{{FILES_TO_UPDATE}}|${FILES_TO_UPDATE[*]}|g")
@@ -135,13 +141,13 @@ if [ "$TRIGGER_MODE" = "interactive" ]; then
     echo ""
     case "$AGENT_NAME" in
         "cline")
-            echo "  cline -m act \'Read and complete the task in $TASK_FILE\''"
+            echo "  cline -m act \'Read and complete the task in $TASK_FILE\'"
             ;;
         "aider")
-            echo "  aider \'Read and complete the task in $TASK_FILE\''"
+            echo "  aider \'Read and complete the task in $TASK_FILE\'"
             ;;
         "claude")
-            echo "  claude \'Read and complete the task in $TASK_FILE\''"
+            echo "  claude \'Read and complete the task in $TASK_FILE\'"
             ;;
         *)
             echo "  Please ask your coding agent to read and complete the task in $TASK_FILE"
@@ -186,14 +192,29 @@ if [ "$TRIGGER_MODE" = "auto" ]; then
     echo ""
 
     if [ "$AUTO_COMMIT" = "true" ]; then
-        CHANGED_FILES_BY_AGENT=$(git diff HEAD~1 HEAD --name-only | wc -l)
+        # Get files changed by the agent
+        AGENT_CHANGED_FILES=($(git diff HEAD~1 HEAD --name-only))
+        CHANGED_FILES_BY_AGENT=${#AGENT_CHANGED_FILES[@]}
+
         if [ "$CHANGED_FILES_BY_AGENT" -gt 0 ]; then
-            echo " Keeper updated $CHANGED_FILES_BY_AGENT documentation file(s)"
+            echo " Keeper updated the following documentation file(s):"
+            for file in "${AGENT_CHANGED_FILES[@]}"; do
+                echo "  - $file"
+            done
+            echo ""
+
+            echo "## Agent-Generated Documentation Changes:"
+            for file in "${AGENT_CHANGED_FILES[@]}"; do
+                echo "### Diff for $file"
+                echo "\`\`\`diff"
+                git diff HEAD~1 HEAD -- "$file" # Show diff for individual file
+                echo "\`\`\`"
+                echo ""
+            done
         fi
     fi
     exit 0
-fi
-HOOK_EOF
+EOF
 
 cat > "$CONFIG_FILE" << 'CONFIG_EOF'
 {
@@ -253,6 +274,7 @@ Agent-powered documentation that stays in sync with your code.
 Edit `$CONFIG_FILE` to customize:
 - `trigger_mode`: "auto" or "interactive".
 - `auto_commit`: `true` or `false`.
+- `debug`: `true` or `false`.
 - `agent`: The name of your preferred coding agent. Supported agents: `cline`, `aider`, `claude`.
 - `agent_command` (optional): Provide a custom command to run your agent. Use `{{TASK_FILE}}` as a placeholder for the task file path.
 - `files_to_update`: A list of documentation files and directories to keep updated.
