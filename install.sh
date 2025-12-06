@@ -2,7 +2,6 @@
 # Keeper Installer
 # Usage: curl -fsSL https://keeper.dev/install.sh | bash
 
-# adding arbitrary comment for changes
 set -e
 
 echo "📚 Installing Keeper..."
