@@ -86,7 +86,7 @@ if [ ${#FILES_TO_PROCESS[@]} -eq 0 ]; then
     exit 0
 fi
 
-echo "Keeper: Processing the following files:"
+echo " Keeper: Processing the following files:"
 sleep 1
 for file in "${FILES_TO_PROCESS[@]}"; do
     echo "  - $file"
@@ -129,7 +129,7 @@ echo "\`\`\`" >> "$TASK_FILE"
 if [ "$TRIGGER_MODE" = "interactive" ]; then
     echo ""
     echo " Keeper: Task created"
-    echo "📂: $TASK_FILE"
+    echo " 📂: $TASK_FILE"
     sleep 1
     echo ""
     echo "Call your agent as follows:"
@@ -137,26 +137,28 @@ if [ "$TRIGGER_MODE" = "interactive" ]; then
     
     case "$AGENT_NAME" in
         "cline")
-            echo "  cline -m act 'Read and complete the task in $TASK_FILE'"
+            echo " cline -m act 'Read and complete the task in $TASK_FILE'"
             ;;
         "aider")
-            echo "  aider 'Read and complete the task in $TASK_FILE'"
+            echo " aider 'Read and complete the task in $TASK_FILE'"
             ;;
         "claude")
-            echo "  claude 'Read and complete the task in $TASK_FILE'"
+            echo " claude 'Read and complete the task in $TASK_FILE'"
             ;;
         *)
-            echo "  Please ask your coding agent to read and complete the task in $TASK_FILE"
+            echo " Please ask your coding agent to read and complete the task in $TASK_FILE"
             ;;
     esac
     
     echo ""
     echo "After the agent responds, it will update your docs automatically."
     echo ""
+    echo ""
     echo "💡 Want to run Keeper in autonomous mode?"
     echo "   Change trigger_mode to 'auto' in .keeper/config.json"
     echo ""
     echo "📖 Read $KEEPER_README_FILE for more information"
+    echo ""
     exit 0
 fi
 
