@@ -26,415 +26,73 @@ You are strictly limited to the following actions:
 
 ## Changed Files
 ```
-docs/index.html install.sh run_tests.sh
+README.md docs/index.html install.sh
 ```
 
 ## Code Changes:
 ```diff
+diff --git a/README.md b/README.md
+index e69de29..53dddb4 100644
+--- a/README.md
++++ b/README.md
+@@ -0,0 +1,28 @@
++# Keeper
++
++Keeper is a developer tool that helps keep your documentation in sync with your code. It automatically generates documentation update tasks for an AI agent to complete after you commit your code.
++
++## How it Works
++
++1.  **Git Hook**: Keeper installs a `post-commit` Git hook that runs after each commit.
++2.  **Task Generation**: The hook generates a Markdown file with the code changes and instructions for an AI agent to update the documentation.
++3.  **AI Agent**: You can then use your preferred AI agent to complete the task in the generated file.
++
++## Installation
++
++```bash
++curl -fsSL https://github.com/digitalcreationsco/keeper/releases/latest/download/install.sh | bash
++```
++
++## Configuration
++
++Keeper can be configured using the `.keeper/config.json` file in your repository.
++
++### `auto_commit`
++
++By default, Keeper does not automatically commit the documentation changes. To enable this feature, set `auto_commit` to `true` in your config file:
++
++```json
++{
++  "auto_commit": true
++}
+\ No newline at end of file
 diff --git a/docs/index.html b/docs/index.html
-index 4deefa6..4c8169a 100644
+index 4c8169a..874aa41 100644
 --- a/docs/index.html
 +++ b/docs/index.html
-@@ -16,10 +16,10 @@
-         body {
-             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-             line-height: 1.6;
--            color: #333;
--            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-+            color: #000;
-+            background: #fff;
-             min-height: 100vh;
--            padding: 20px;
-+            padding: 40px 20px;
-         }
- 
-         .container {
-@@ -30,48 +30,60 @@
-         header {
-             text-align: center;
-             padding: 60px 20px;
--            color: white;
-+            border-bottom: 2px solid #000;
-+            margin-bottom: 60px;
-         }
- 
--        .logo {
--            font-size: 64px;
-+        .logo-row {
-+            display: flex;
-+            align-items: center;
-+            justify-content: center;
-+            gap: 20px;
-             margin-bottom: 20px;
-         }
- 
-+        .logo {
-+            font-size: 48px;
-+        }
-+
-         h1 {
--            font-size: 3.5rem;
--            margin-bottom: 20px;
-+            font-size: 48px;
-             font-weight: 700;
-         }
- 
-         .tagline {
--            font-size: 1.5rem;
--            opacity: 0.95;
--            margin-bottom: 40px;
-+            font-size: 14px;
-+            margin-top: 20px;
-         }
- 
-         .install-section {
--            background: white;
--            border-radius: 16px;
-+            background: #f5f5f5;
-             padding: 40px;
--            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-             margin-bottom: 40px;
-+            border: 2px solid #000;
-         }
- 
-         .install-title {
--            font-size: 1.5rem;
-+            font-size: 48px;
-             margin-bottom: 20px;
--            color: #667eea;
--            font-weight: 600;
-+            font-weight: 700;
-+        }
-+
-+        .version-badge {
-+            display: inline-block;
-+            background: #000;
-+            color: #fff;
-+            padding: 4px 12px;
-+            font-size: 14px;
-+            margin-left: 10px;
-         }
- 
-         .command-box {
--            background: #1e1e1e;
--            color: #d4d4d4;
-+            background: #000;
-+            color: #fff;
-             padding: 20px;
--            border-radius: 8px;
-             font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
--            font-size: 16px;
-+            font-size: 14px;
-             position: relative;
-             margin-bottom: 15px;
-             overflow-x: auto;
-@@ -86,175 +98,188 @@
-             position: absolute;
-             top: 12px;
-             right: 12px;
--            background: #667eea;
--            color: white;
--            border: none;
-+            background: #fff;
-+            color: #000;
-+            border: 2px solid #fff;
-             padding: 8px 16px;
--            border-radius: 6px;
-             cursor: pointer;
-             font-size: 14px;
-             transition: all 0.2s;
-         }
- 
-         .copy-btn:hover {
--            background: #5568d3;
--            transform: translateY(-2px);
-+            background: #000;
-+            color: #fff;
-         }
- 
-         .copy-btn.copied {
--            background: #10b981;
-+            background: #fff;
-+            color: #000;
-         }
- 
--        .version-badge {
--            display: inline-block;
--            background: #667eea;
--            color: white;
--            padding: 4px 12px;
--            border-radius: 12px;
-+        .install-note {
-             font-size: 14px;
--            margin-left: 10px;
-+            margin-top: 10px;
-         }
- 
-         .features {
-             display: grid;
-             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
--            gap: 30px;
-+            gap: 2px;
-             margin-bottom: 40px;
-+            border: 2px solid #000;
-         }
- 
-         .feature-card {
--            background: white;
--            padding: 30px;
--            border-radius: 12px;
--            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-+            background: #f5f5f5;
-+            padding: 40px;
-+            border: 2px solid #000;
-         }
- 
-         .feature-icon {
-             font-size: 48px;
--            margin-bottom: 15px;
-+            margin-bottom: 20px;
-         }
- 
-         .feature-card h3 {
--            font-size: 1.4rem;
--            margin-bottom: 10px;
--            color: #667eea;
-+            font-size: 48px;
-+            margin-bottom: 20px;
-+            font-weight: 700;
-         }
- 
-         .feature-card p {
--            color: #666;
-+            font-size: 14px;
-             line-height: 1.6;
-         }
- 
-         .how-it-works {
--            background: white;
-+            background: #f5f5f5;
-             padding: 40px;
--            border-radius: 12px;
--            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-+            border: 2px solid #000;
-             margin-bottom: 40px;
-         }
- 
-         .how-it-works h2 {
--            font-size: 2rem;
--            margin-bottom: 30px;
--            color: #667eea;
-+            font-size: 48px;
-+            margin-bottom: 40px;
-             text-align: center;
-+            font-weight: 700;
-         }
- 
-         .steps {
-             display: grid;
-             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
--            gap: 30px;
-+            gap: 2px;
-         }
- 
-         .step {
-             text-align: center;
--            padding: 20px;
-+            padding: 40px 20px;
-+            background: #fff;
-+            border: 2px solid #000;
-         }
- 
-         .step-number {
-             width: 60px;
-             height: 60px;
--            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
--            color: white;
--            border-radius: 50%;
-+            background: #000;
-+            color: #fff;
-             display: flex;
-             align-items: center;
-             justify-content: center;
--            font-size: 24px;
-+            font-size: 48px;
-             font-weight: bold;
-             margin: 0 auto 20px;
-         }
- 
-         .step h4 {
--            font-size: 1.2rem;
--            margin-bottom: 10px;
--            color: #333;
-+            font-size: 48px;
-+            margin-bottom: 20px;
-+            font-weight: 700;
-         }
- 
-         .step p {
--            color: #666;
-+            font-size: 14px;
-         }
- 
-         .agents-section {
--            background: white;
-+            background: #f5f5f5;
-             padding: 40px;
--            border-radius: 12px;
--            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-+            border: 2px solid #000;
-             margin-bottom: 40px;
-         }
- 
-         .agents-section h2 {
--            font-size: 2rem;
-+            font-size: 48px;
-             margin-bottom: 20px;
--            color: #667eea;
-             text-align: center;
-+            font-weight: 700;
-+        }
-+
-+        .agents-section p {
-+            font-size: 14px;
-+            text-align: center;
-+            margin-bottom: 20px;
-         }
- 
-         .agents-grid {
-             display: flex;
-             flex-wrap: wrap;
-             justify-content: center;
--            gap: 20px;
-+            gap: 2px;
-             margin-top: 30px;
-         }
- 
-         .agent-badge {
--            background: #f3f4f6;
-+            background: #fff;
-             padding: 12px 24px;
--            border-radius: 24px;
-+            font-size: 14px;
-             font-weight: 500;
--            color: #374151;
--            border: 2px solid #e5e7eb;
-+            border: 2px solid #000;
-         }
- 
-         footer {
-             text-align: center;
-             padding: 40px 20px;
--            color: white;
-+            border-top: 2px solid #000;
-+            margin-top: 60px;
-+        }
-+
-+        footer p {
-+            font-size: 14px;
-         }
- 
-         footer a {
--            color: white;
-+            color: #000;
-             text-decoration: none;
--            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
-+            border-bottom: 2px solid #000;
-             transition: border-color 0.2s;
-         }
- 
-         footer a:hover {
--            border-bottom-color: white;
-+            opacity: 0.6;
-         }
- 
-         @media (max-width: 768px) {
-             h1 {
--                font-size: 2.5rem;
-+                font-size: 32px;
-+            }
-+
-+            .logo {
-+                font-size: 32px;
-             }
- 
--            .tagline {
--                font-size: 1.2rem;
-+            .install-title,
-+            .feature-card h3,
-+            .how-it-works h2,
-+            .step h4,
-+            .step-number,
-+            .agents-section h2 {
-+                font-size: 32px;
-             }
- 
-             .command-box {
--                font-size: 14px;
-+                font-size: 12px;
-             }
-         }
-     </style>
-@@ -263,8 +288,10 @@
- <body>
-     <div class="container">
-         <header>
--            <div class="logo">📚</div>
--            <h1>Keeper</h1>
-+            <div class="logo-row">
-+                <div class="logo">📚</div>
-+                <h1>Keeper</h1>
-+            </div>
-             <p class="tagline">Keep your documentation in sync with your code</p>
-         </header>
- 
-@@ -275,7 +302,7 @@
-                     id="install-command">curl -fsSL https://github.com/digitalcreationsco/keeper/releases/latest/download/install.sh | bash</code>
-                 <button class="copy-btn" onclick="copyInstallCommand()">Copy</button>
-             </div>
--            <p style="color: #666; font-size: 14px; margin-top: 10px;">
-+            <p class="install-note">
-                 💡 Run this command in your git repository root directory
-             </p>
-         </div>
-@@ -331,7 +358,7 @@
- 
-         <div class="agents-section">
-             <h2>Works With Your Favorite Agent</h2>
--            <p style="text-align: center; color: #666; margin-bottom: 20px;">
-+            <p>
-                 Keeper uses a simple file-based protocol that any coding agent can understand
+@@ -363,11 +363,8 @@
              </p>
              <div class="agents-grid">
-@@ -347,12 +374,12 @@
- 
-         <div class="how-it-works">
-             <h2>Example Usage</h2>
--            <div class="command-box" style="margin-bottom: 20px;">
-+            <div class="command-box">
-                 <code># Make changes to your code
- git add .
- git commit -m "feat: add user authentication"
- 
-- Keeper: Task created at .keeper/agent-request.md
-+📝 Keeper: Task created at .keeper/agent-request.md
- 
- # Ask your agent to complete the task
- claude code "Complete the task in .keeper/agent-request.md"
+                 <div class="agent-badge">🤖 Claude Code</div>
+-                <div class="agent-badge">💬 GitHub Copilot</div>
+-                <div class="agent-badge">🔧 Cline</div>
+-                <div class="agent-badge">⚡ Cursor</div>
+-                <div class="agent-badge">➡️ Continue.dev</div>
+                 <div class="agent-badge">🎯 Aider</div>
++                <div class="agent-badge">🔧 Cline</div>
+                 <div class="agent-badge">✨ Your Custom Agent</div>
+             </div>
+         </div>
 diff --git a/install.sh b/install.sh
-index c0dd63b..5bf2764 100755
+index 5bf2764..e8a15cb 100755
 --- a/install.sh
 +++ b/install.sh
-@@ -188,7 +188,7 @@ HOOK_EOF
- cat > "$CONFIG_FILE" << 'CONFIG_EOF'
- {
-   "trigger_mode": "interactive",
--  "auto_commit": true,
-+  "auto_commit": false,
-   "agent": "cline",
-   "agent_command": "",
-   "files_to_update": [
-diff --git a/run_tests.sh b/run_tests.sh
-old mode 100644
-new mode 100755
+@@ -125,7 +125,7 @@ if [ "$TRIGGER_MODE" = "interactive" ]; then
+     echo ""
+     case "$AGENT_NAME" in
+         "cline")
+-            echo "  cline 'Read and complete the task in $TASK_FILE'"
++            echo "  cline -m act 'Read and complete the task in $TASK_FILE'"
+             ;;
+         "aider")
+             echo "  aider 'Read and complete the task in $TASK_FILE'"
 ```

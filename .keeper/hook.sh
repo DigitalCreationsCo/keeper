@@ -56,6 +56,7 @@ if [ ${#FILES_TO_PROCESS[@]} -eq 0 ]; then
 fi
 
 echo "Keeper: Processing the following files:"
+sleep 1
 for file in "${FILES_TO_PROCESS[@]}"; do
     echo "- $file"
 done
@@ -95,12 +96,13 @@ if [ "$TRIGGER_MODE" = "interactive" ]; then
     echo ""
     echo " Keeper has prepared a documentation update task"
     echo "📂: $TASK_FILE"
+    sleep 1
     echo ""
     echo "Call your agent as follows:"
     echo ""
     case "$AGENT_NAME" in
         "cline")
-            echo "  cline 'Read and complete the task in $TASK_FILE'"
+            echo "  cline -m act 'Read and complete the task in $TASK_FILE'"
             ;;
         "aider")
             echo "  aider 'Read and complete the task in $TASK_FILE'"
