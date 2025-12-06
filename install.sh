@@ -222,7 +222,7 @@ if [ "$TRIGGER_MODE" = "auto" ]; then
     fi
     exit 0
 fi
-EOF
+HOOK_EOF
 
 cat > "$CONFIG_FILE" << 'CONFIG_EOF'
 {
