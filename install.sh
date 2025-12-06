@@ -39,11 +39,11 @@ if [ -f "$CONFIG_FILE" ]; then
     AGENT_COMMAND_OVERRIDE=$(jq -r ".agent_command // \"\"" "$CONFIG_FILE")
     DEBUG_MODE=$(jq -r ".debug // false" "$CONFIG_FILE")
 
-    if [ "$DEBUG_MODE" = "true" ]; then # ADDED
+    if [ "$DEBUG_MODE" = "true" ]; then 
         echo "DEBUG: CONFIG_FILE path is $CONFIG_FILE"
         echo "DEBUG: Does config.json exist? $([ -f "$CONFIG_FILE" ] && echo "yes" || echo "no")"
         echo "DEBUG: AUTO_COMMIT is $AUTO_COMMIT"
-    fi # ADDED
+    fi
     
     FILES_TO_UPDATE=()
     while IFS= read -r line; do
@@ -72,7 +72,7 @@ FILES_TO_PROCESS=()
 for file in "${ALL_CHANGED_FILES[@]}"; do
     is_excluded=false
     for pattern in "${EXCLUDE_PATTERNS[@]}"; do
-        if [[ "$file" == $pattern ]]; then
+        if [[ "$file" == "$pattern" ]]; then
             is_excluded=true
             break
         fi
@@ -106,12 +106,12 @@ else
     COMMIT_INSTRUCTION="The documentation files have been updated. Please review and commit them."
 fi
 
-if [ "$DEBUG_MODE" = "true" ]; then # ADDED
+if [ "$DEBUG_MODE" = "true" ]; then
     echo "DEBUG: PROMPT_TEMPLATE content starts here:"
     cat "$TEMPLATE_FILE"
     echo "DEBUG: PROMPT_TEMPLATE content ends here."
     echo "DEBUG: COMMIT_INSTRUCTION is $COMMIT_INSTRUCTION"
-fi # ADDED
+fi 
 PROMPT_TEMPLATE=$(cat "$TEMPLATE_FILE")
 TASK_CONTENT=$(echo "$PROMPT_TEMPLATE" | sed "s#{{COMMIT_INSTRUCTION}}#$COMMIT_INSTRUCTION#g") # CHANGED DELIMITER
 TASK_CONTENT=$(echo "$TASK_CONTENT" | sed "s|{{FILES_TO_UPDATE}}|${FILES_TO_UPDATE[*]}|g")
@@ -197,13 +197,13 @@ if [ "$TRIGGER_MODE" = "auto" ]; then
         CHANGED_FILES_BY_AGENT=${#AGENT_CHANGED_FILES[@]}
 
         if [ "$CHANGED_FILES_BY_AGENT" -gt 0 ]; then
-            echo " Keeper updated the following documentation file(s):"
+            echo " Keeper updated the following file(s):"
             for file in "${AGENT_CHANGED_FILES[@]}"; do
                 echo "  - $file"
             done
             echo ""
 
-            echo "## Agent-Generated Documentation Changes:"
+            echo " Documentation Changes:"
             for file in "${AGENT_CHANGED_FILES[@]}"; do
                 echo "### Diff for $file"
                 echo "\`\`\`diff"
