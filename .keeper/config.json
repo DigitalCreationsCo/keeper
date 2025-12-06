@@ -1,6 +1,6 @@
 {
-  "trigger_mode": "interactive",
-  "auto_commit": false,
+  "trigger_mode": "auto",
+  "auto_commit": true,
   "agent": "cline",
   "agent_command": "",
   "files_to_update": [

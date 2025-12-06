@@ -6,8 +6,8 @@ Update the following documentation files to reflect recent code changes:
 
 ## Scope of Work
 You are strictly limited to the following actions:
-1.  **Update Documentation**: Modify the documentation files to accurately reflect the code changes.
-2.  **Follow Commit Instructions**: Adhere to the commit instruction provided at the end of this task.
+1. **Update Documentation**: Modify the documentation files to accurately reflect the code changes.
+2. **Follow Commit Instructions**: Adhere to the commit instruction provided at the end of this task.
 
 **IMPORTANT**: Do not perform any other actions. Do not diagnose issues, suggest other code changes, or try to fix anything that is not directly related to the documentation update. If no documentation updates are needed, simply complete the task without making any changes.
 
