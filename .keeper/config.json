@@ -11,6 +11,7 @@
     ".keeper/*",
     "*.lock",
     "package.json",
+    ".DS_Store",
     ".gitignore"
   ]
 }

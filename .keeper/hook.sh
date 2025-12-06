@@ -144,7 +144,7 @@ if [ "$TRIGGER_MODE" = "auto" ]; then
         esac
     fi
 
-    FINAL_COMMAND=$(echo "$AGENT_COMMAND" | sed "s/{{TASK_FILE}}/$TASK_FILE/g")
+    FINAL_COMMAND=$(echo "$AGENT_COMMAND" | sed "s|{{TASK_FILE}}|$TASK_FILE|g")
 
     echo ""
     echo " Keeper is calling the AI agent '$AGENT_NAME'. Please wait, this may take a few moments..."
