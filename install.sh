@@ -188,7 +188,7 @@ HOOK_EOF
 cat > "$CONFIG_FILE" << 'CONFIG_EOF'
 {
   "trigger_mode": "interactive",
-  "auto_commit": true,
+  "auto_commit": false,
   "agent": "cline",
   "agent_command": "",
   "files_to_update": [
