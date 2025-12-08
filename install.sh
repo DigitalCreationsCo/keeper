@@ -124,14 +124,14 @@ TASK_CONTENT=$(echo "$TASK_CONTENT" | sed "s|{{FILES_TO_UPDATE}}|${FILES_TO_UPDA
 echo "$TASK_CONTENT" > "$TASK_FILE"
 echo "" >> "$TASK_FILE"
 echo "## Changed Files" >> "$TASK_FILE"
-echo "\`\`\`" >> "$TASK_FILE"
-printf \'%s\n\' "${FILES_TO_PROCESS[@]}" >> "$TASK_FILE"
-echo "\`\`\`" >> "$TASK_FILE"
+echo '```' >> "$TASK_FILE"
+printf '%s\n' "${FILES_TO_PROCESS[@]}" >> "$TASK_FILE"
+echo '```' >> "$TASK_FILE"
 echo "" >> "$TASK_FILE"
 echo "## Code Changes" >> "$TASK_FILE"
-echo "\`\`\`diff" >> "$TASK_FILE"
+echo '```diff' >> "$TASK_FILE"
 echo "$DIFF" >> "$TASK_FILE"
-echo "\`\`\`" >> "$TASK_FILE"
+echo '```' >> "$TASK_FILE"
 
 if [ "$TRIGGER_MODE" = "interactive" ]; then
     echo ""
@@ -291,7 +291,7 @@ Apply ALL necessary changes in a single batch:
 
 **If aborting:**
 "Cannot complete in 2 commands. Requires X commands for: [specific items]"
-f
+
 ---
 
 ## Example Changes Summary
@@ -300,7 +300,7 @@ Modified files: 2
 Changes:
 README.md: 
 - New main entry point (replaces index.js)
-docs/api: f
+docs/api: 
 - startReference/endReference (replaces lastReferenceUrl)
 - Model defaults: Added fallbacks for model_name
 - Evaluation: buildEvalPrompt
