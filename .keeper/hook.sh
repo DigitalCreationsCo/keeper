@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Exit early if a rebase is in progress (silent exit)
+if git rev-parse --is-inside-work-tree >/dev/null 2>&1 && \
+   ( [ -d ".git/rebase-merge" ] || [ -d ".git/rebase-apply" ] ); then
+    exit 0
+fi
+
 KEEPER_DIR=".keeper"
 KEEPER_README_FILE="$KEEPER_DIR/README.md"
 TASK_FILE="$KEEPER_DIR/agent-task.md"
@@ -15,7 +21,7 @@ if [ -f "$CONFIG_FILE" ]; then
 
     if [ "$DEBUG_MODE" = "true" ]; then 
         echo "DEBUG: CONFIG_FILE path is $CONFIG_FILE"
-        echo "DEBUG: Does config.json exist? $([ -f "$CONFIG_FILE" ] && echo "yes" || echo "no")"
+        echo "DEBUG: Does config.json exist? $([ -f \"$CONFIG_FILE\" ] && echo \"yes\" || echo \"no\")"
         echo "DEBUG: AUTO_COMMIT is $AUTO_COMMIT"
     fi
     
@@ -99,7 +105,7 @@ echo "$TASK_CONTENT" > "$TASK_FILE"
 echo "" >> "$TASK_FILE"
 echo "## Changed Files" >> "$TASK_FILE"
 echo "\`\`\`" >> "$TASK_FILE"
-printf '%s\n' "${FILES_TO_PROCESS[@]}" >> "$TASK_FILE"
+printf \'%s\n\' "${FILES_TO_PROCESS[@]}" >> "$TASK_FILE"
 echo "\`\`\`" >> "$TASK_FILE"
 echo "" >> "$TASK_FILE"
 echo "## Code Changes" >> "$TASK_FILE"
@@ -118,13 +124,13 @@ if [ "$TRIGGER_MODE" = "interactive" ]; then
     
     case "$AGENT_NAME" in
         "cline")
-            echo " cline -m act 'Read and complete the task in $TASK_FILE'"
+            echo " cline -m act \'Read and complete the task in $TASK_FILE\'"
             ;;
         "aider")
-            echo " aider 'Read and complete the task in $TASK_FILE'"
+            echo " aider \'Read and complete the task in $TASK_FILE\'"
             ;;
         "claude")
-            echo " claude 'Read and complete the task in $TASK_FILE'"
+            echo " claude \'Read and complete the task in $TASK_FILE\'"
             ;;
         *)
             echo " Please ask your coding agent to read and complete the task in $TASK_FILE"
@@ -136,7 +142,7 @@ if [ "$TRIGGER_MODE" = "interactive" ]; then
     echo ""
     echo ""
     echo "💡 Want to run Keeper in autonomous mode?"
-    echo "   Change trigger_mode to 'auto' in .keeper/config.json"
+    echo "   Change trigger_mode to \'auto\' in .keeper/config.json"
     echo ""
     echo "📖 Read $KEEPER_README_FILE for more information"
     echo ""
@@ -160,7 +166,7 @@ if [ "$TRIGGER_MODE" = "auto" ]; then
                 AGENT_COMMAND="claude {{TASK_FILE}}"
                 ;;
             *)
-                echo "Keeper: Unknown agent '$AGENT_NAME'. Please configure 'agent_command' in your config.json."
+                echo "Keeper: Unknown agent \'$AGENT_NAME\'. Please configure \'agent_command\' in your config.json."
                 exit 1
                 ;;
         esac
@@ -169,7 +175,7 @@ if [ "$TRIGGER_MODE" = "auto" ]; then
     FINAL_COMMAND=$(echo "$AGENT_COMMAND" | sed "s|{{TASK_FILE}}|$TASK_FILE|g")
 
     echo ""
-    echo "🤖 Keeper is calling the AI agent '$AGENT_NAME'. Please wait..."
+    echo "🤖 Keeper is calling the AI agent \'$AGENT_NAME\'. Please wait..."
     echo ""
     eval "$FINAL_COMMAND"
     echo ""

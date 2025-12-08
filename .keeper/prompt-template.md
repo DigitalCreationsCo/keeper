@@ -1,26 +1,70 @@
-# 🤖 Keeper Agent Task
+# 🤖 Keeper Agent Task - EFFICIENCY MODE
 
-## Task
-Update the following documentation files to reflect recent code changes:
-{{FILES_TO_UPDATE}}
+## Mission
+Update documentation files (README.md, workflow.md) to reflect code changes. **Complete in ≤2 commands or abort.**
 
-## Scope of Work
-You are strictly limited to the following actions:
-1. **Update Documentation**: Modify the documentation files to accurately reflect the code changes.
-2. **Follow Commit Instructions**: Adhere to the commit instruction provided at the end of this task.
+## Hard Constraints
+1. **Command Limit**: Maximum 2 commands total
+2. **Scope Lock**: Documentation updates ONLY
+3. **No Diagnosis**: Do not analyze, troubleshoot, or suggest fixes
+4. **No Side Quests**: Ignore unrelated issues in code/docs
 
-**IMPORTANT**: Do not perform any other actions. Do not diagnose issues, suggest other code changes, or try to fix anything that is not directly related to the documentation update. If no documentation updates are needed, simply complete the task without making any changes.
+## Execution Protocol
 
-## Instructions
-1. Analyze the code changes below
-2. Update the documentation to reflect:
-   - New features or functions added
-   - Modified APIs or interfaces
-   - Changed dependencies or requirements
-   - Updated installation or usage instructions
-3. Maintain the existing tone and structure
-4. Be concise but complete
-5. {{COMMIT_INSTRUCTION}}
+### Step 1: Analyze (Mental Only - No Output)
+Scan code changes for documentation-impacting items:
+- New/removed files (graph.ts replaces index.js)
+- New/modified functions (generateSceneFramesBatch, evaluateFrameQuality)
+- Changed APIs (startFrameUrl/endFrameUrl replacing lastFrameUrl)
+- Updated dependencies (new imports, model changes)
+- Modified workflows (frame generation phase, quality checks)
+
+### Step 2: Update Documentation (Command 1)
+Apply ALL necessary changes in a single batch:
+- Update technical details (file paths, function names, APIs)
+- Reflect architectural changes (new agents, workflow phases)
+- Fix broken references (renamed fields, removed functions)
+- Maintain existing tone/structure
+
+**Critical**: Bundle all changes into ONE update operation.
+
+### Step 3: Commit (Command 2)
+```bash
+git add . && git commit -m "docs: update documentation"
+```
+
+## Decision Tree
+- **Can complete in 2 commands?** → Execute
+- **Need 3+ commands?** → Abort and report: "Task requires X commands. Changes needed: [list]"
+- **No changes needed?** → Report: "Documentation already current" (0 commands)
+
+## Quality Checklist (Internal - No Output)
+- [ ] All new features documented
+- [ ] Deprecated items removed
+- [ ] Technical accuracy verified
+- [ ] No scope creep
+
+## Output Format
+**If executing:**
+[Brief summary of changes made]
+
+**If aborting:**
+"Cannot complete in 2 commands. Requires X commands for: [specific items]"
 
 ---
+
+## Example Code Changes Summary
+```
+Modified files: 2
+Changes:
+README.md: 
+- New main entry point (replaces index.js)
+docs/api: 
+- startReference/endReference (replaces lastReferenceUrl)
+- Model defaults: Added fallbacks for model_name
+- Evaluation: buildEvalPrompt
+```
+
+**Now execute with maximum efficiency.**
+
 
