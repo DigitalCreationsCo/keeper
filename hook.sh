@@ -28,7 +28,7 @@ keeper_update_check() {
     fi
 }
 
-keeper_update_check &
+keeper_update_check &&
 
 if [ -f "$CONFIG_FILE" ]; then
     TRIGGER_MODE=$(jq -r ".trigger_mode // \"auto\"" "$CONFIG_FILE")
