@@ -1,0 +1,15 @@
+{
+    "trigger_mode": "interactive",
+    "auto_commit": false,
+    "debug": false,
+    "agent": "claude",
+    "agent_command": "",
+    "files_to_update": [
+        "README.md",
+        "docs/"
+    ],
+    "exclude": [
+        "*.lock",
+        "package.json"
+    ]
+}
