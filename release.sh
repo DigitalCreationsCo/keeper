@@ -1,16 +1,12 @@
 # 1. Commit source
 git add .
-git commit -m "release: $VERSION"
+git commit -m "release: $VERSION" --allow-empty
 
-# 2. Update version
-npm version patch
-
-# 3. Push tag
+# 2. Push tag
 git tag -a "$VERSION" -m "Release $VERSION"
-git push origin main
-git push origin $VERSION
+git push origin main --tags
 
-# 4. GitHub Actions automatically:
+# 3. GitHub Actions automatically:
 #    - Builds all files with correct version
 #    - Creates release
 #    - Uploads: install.sh, hook.sh, config.json, README.md
