@@ -18,24 +18,24 @@ Update documentation files to reflect recent code changes.
 
 ## Changed Files
 ```
-docs/index.html
+hook.sh
 ```
 
 ## Code Changes
 ```diff
-diff --git a/docs/index.html b/docs/index.html
-index ac5e530..2a4fcde 100644
---- a/docs/index.html
-+++ b/docs/index.html
-@@ -295,7 +295,7 @@
-         </header>
+diff --git a/hook.sh b/hook.sh
+index ba3ac9b..a007bdd 100644
+--- a/hook.sh
++++ b/hook.sh
+@@ -140,7 +140,7 @@ cat > "$TASK_FILE" << TASK_EOF
+ Update documentation files to reflect recent code changes.
  
-         <div class="install-section">
--            <h2 class="install-title">Quick Install <span class="version-badge">v1.2.5</span></h2>
-+            <h2 class="install-title">Quick Install <span class="version-badge">v1.2.7</span></h2>
-             <div class="command-box">
-                 <code
-                     id="install-command">curl -fsSL https://github.com/digitalcreationsco/keeper/releases/latest/download/install.sh | bash</code>
+ ## Documentation Files to Update
+-$(printf '- %s\n' "${FILES_TO_UPDATE[@]}")
++$(for f in "${FILES_TO_UPDATE[@]}"; do echo "- $f"; done)
+ 
+ ## Instructions
+ 1. Read the code changes below carefully
 ```
 
 ---
