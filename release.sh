@@ -1,9 +1,11 @@
-# 1. Update version
-npm version patch
-
 # 2. Commit source
 git add .
 git commit -m "release: $VERSION"
+
+# 1. Update version
+npm version patch
+
+
 
 # 3. Push tag
 git tag -a "$VERSION" -m "Release $VERSION"
