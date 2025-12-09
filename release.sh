@@ -1,11 +1,9 @@
-# 2. Commit source
+# 1. Commit source
 git add .
 git commit -m "release: $VERSION"
 
-# 1. Update version
+# 2. Update version
 npm version patch
-
-
 
 # 3. Push tag
 git tag -a "$VERSION" -m "Release $VERSION"

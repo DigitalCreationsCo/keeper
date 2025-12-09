@@ -1,6 +1,6 @@
 {
   "name": "keeper",
-  "version": "1.2.5",
+  "version": "1.2.4",
   "description": "Keeper is a developer tool that helps keep your documentation in sync with your code. It automatically generates documentation update tasks for an AI agent to complete after you commit your code.",
   "directories": {
     "doc": "docs"
