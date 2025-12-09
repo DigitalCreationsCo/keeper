@@ -39,7 +39,7 @@ keeper_update_check() {
     fi
 }
 
-keeper_update_check &
+keeper_update_check &&
 
 if [ -f "$CONFIG_FILE" ]; then
     TRIGGER_MODE=$(jq -r ".trigger_mode // \"interactive\"" "$CONFIG_FILE")
@@ -52,6 +52,7 @@ if [ -f "$CONFIG_FILE" ]; then
         echo "DEBUG: CONFIG_FILE path is $CONFIG_FILE"
         echo "DEBUG: Does config.json exist? $([ -f \"$CONFIG_FILE\" ] && echo \"yes\" || echo \"no\")"
         echo "DEBUG: AUTO_COMMIT is $AUTO_COMMIT"
+        echo "DEBUG: TRIGGER_MODE is $TRIGGER_MODE"
     fi
     
     FILES_TO_UPDATE=()
@@ -116,15 +117,19 @@ if [ -z "$DIFF" ]; then
     exit 0
 fi
 
+# Set commit instruction based on auto_commit setting
 if [ "$AUTO_COMMIT" = "true" ]; then
-    COMMIT_INSTRUCTION='After completing this task, run: ```bash
-git add . && git commit -m "docs: update documentation"
-```'
+    COMMIT_INSTRUCTION="After updating the documentation, commit your changes:
+\`\`\`bash
+git add .
+git commit -m \"docs: update documentation\"
+\`\`\`"
 else
-    COMMIT_INSTRUCTION="The documentation files have been updated. Please review and commit them."
+    COMMIT_INSTRUCTION="After updating the documentation, save your changes. Do not commit them - the user will review and commit manually."
 fi
 
 if [ "$DEBUG_MODE" = "true" ]; then
+    echo "DEBUG: DIFF length is ${#DIFF}"
     echo "DEBUG: COMMIT_INSTRUCTION is $COMMIT_INSTRUCTION"
 fi
 
@@ -132,69 +137,20 @@ cat > "$TASK_FILE" << TASK_EOF
 # 🤖 Keeper Agent Task
 
 ## Mission
-Update documentation files (${FILES_TO_UPDATE[*]}) to reflect code changes. **Complete in ≤2 commands or abort.**
+Update documentation files to reflect recent code changes.
 
-## Hard Constraints
-1. **Command Limit**: Maximum 2 commands total
-2. **Scope Lock**: Documentation updates ONLY
-3. **No Diagnosis**: Do not analyze, troubleshoot, or suggest fixes
-4. **No Side Quests**: Ignore unrelated issues in code/docs
+## Documentation Files to Update
+$(printf '- %s\n' "${FILES_TO_UPDATE[@]}")
 
-### Step 1: Analyze (Mental Only - No Output)
-Scan code changes for documentation-impacting items:
-- New/removed files
-- New/modified functions
-- Changed APIs
-- Updated dependencies
-- Modified workflows
-
-### Step 2: Update Documentation (Command 1)
-Apply ALL necessary changes in a single batch:
-- Update technical details (file paths, function names, APIs)
-- Reflect architectural changes (new agents, workflow phases)
-- Fix broken references (renamed fields, removed functions)
-- Maintain existing tone/structure
-
-**Critical**: Bundle all changes into ONE update operation.
-
-### Step 3: Commit (Command 2)
-$COMMIT_INSTRUCTION
-
-## Decision Tree
-- **Can complete in 2 commands?** → Execute
-- **Need 3+ commands?** → Abort and report: "Task requires X commands. Changes needed: [list]"
-- **No changes needed?** → Report: "Documentation already current" (0 commands)
-
-## Quality Checklist (Internal - No Output)
-- [ ] All new features documented
-- [ ] Deprecated items removed
-- [ ] Technical accuracy verified
-- [ ] No scope creep
-
-## Output Format
-**If executing:**
-[Brief summary of changes made]
-
-**If aborting:**
-"Cannot complete in 2 commands. Requires X commands for: [specific items]"
-
----
-
-## Example Changes Summary
-\`\`\`
-Modified files: 2
-Changes:
-README.md: 
-- New main entry point (replaces index.js)
-docs/api: 
-- startReference/endReference (replaces lastReferenceUrl)
-- Model defaults: Added fallbacks for model_name
-- Evaluation: buildEvalPrompt
-\`\`\`
-
-**Now execute with maximum efficiency.**
-
----
+## Instructions
+1. Read the code changes below carefully
+2. Update the documentation files listed above to reflect:
+   - New features or functions added
+   - Modified APIs or interfaces  
+   - Changed dependencies or requirements
+   - Updated installation or usage instructions
+3. Maintain the existing tone and structure of the documentation
+4. Be concise but complete
 
 ## Changed Files
 \`\`\`
@@ -205,6 +161,11 @@ $(printf '%s\n' "${FILES_TO_PROCESS[@]}")
 \`\`\`diff
 $DIFF
 \`\`\`
+
+---
+
+## Next Steps
+$COMMIT_INSTRUCTION
 TASK_EOF
 
 if [ "$TRIGGER_MODE" = "interactive" ]; then
@@ -249,13 +210,13 @@ if [ "$TRIGGER_MODE" = "auto" ]; then
     else
         case "$AGENT_NAME" in
             "cline")
-                AGENT_COMMAND="cat {{TASK_FILE}} | cline --yolo"
+                AGENT_COMMAND="cline --yolo -m \"Read and complete the task in $TASK_FILE\""
                 ;;
             "aider")
-                AGENT_COMMAND="aider {{TASK_FILE}}"
+                AGENT_COMMAND="aider --yes --message \"Read and complete the task in $TASK_FILE\""
                 ;;
             "claude")
-                AGENT_COMMAND="claude {{TASK_FILE}}"
+                AGENT_COMMAND="claude --message \"Read and complete the task in $TASK_FILE\""
                 ;;
             *)
                 echo "Keeper: Unknown agent '$AGENT_NAME'. Please configure 'agent_command' in your config.json."
@@ -264,21 +225,20 @@ if [ "$TRIGGER_MODE" = "auto" ]; then
         esac
     fi
 
-    FINAL_COMMAND=$(echo "$AGENT_COMMAND" | sed "s|{{TASK_FILE}}|$TASK_FILE|g")
-
     echo ""
     echo "🤖 Keeper is calling the AI agent '$AGENT_NAME'. Please wait..."
     echo ""
     
+    if [ "$DEBUG_MODE" = "true" ]; then
+        echo "DEBUG: Running command: $AGENT_COMMAND"
+    fi
+    
     # Run agent command
-    eval "$FINAL_COMMAND"
+    eval "$AGENT_COMMAND"
     
     echo ""
     echo "✅ Agent execution complete"
     echo ""
-    
-    # Note: The agent should handle the commit itself
-    # We don't check for changes here to avoid git conflicts
     
     exit 0
 fi
