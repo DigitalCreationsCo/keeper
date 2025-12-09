@@ -69,230 +69,30 @@ docs/api:
 
 ## Changed Files
 ```
-.gitignore
-.keeper/README.md
+.keeper/.version_check
+.keeper/agent-task.md
 .keeper/config.json
-.keeper/hook.sh
 ```
 
 ## Code Changes
 ```diff
-diff --git a/.gitignore b/.gitignore
-index 5b85921..496ee2c 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -1,2 +1 @@
--.DS_Store
--.keeper
-\ No newline at end of file
-+.DS_Store
-\ No newline at end of file
-diff --git a/.keeper/README.md b/.keeper/README.md
+diff --git a/.keeper/.version_check b/.keeper/.version_check
 new file mode 100644
-index 0000000..85d2d26
+index 0000000..c20b6ae
 --- /dev/null
-+++ b/.keeper/README.md
-@@ -0,0 +1,52 @@
-+# Keeper
-+
-+Agent-powered documentation that stays in sync with your code.
-+
-+## How it Works
-+
-+1.  **Git Hook**: Keeper installs a `post-commit` Git hook that runs after each commit.
-+2.  **Task Generation**: The hook generates a Markdown file with the code changes and instructions for an AI agent to update the documentation.
-+3.  **AI Agent**: You can then use your preferred AI agent to complete the task in the generated file.
-+
-+## Installation
-+
-+```bash
-+curl -fsSL https://github.com/digitalcreationsco/keeper/releases/latest/download/install.sh | bash
-+```
-+
-+## Configuration
-+
-+Edit `.keeper/config.json` to customize:
-+
-+- `trigger_mode`: "auto" or "interactive"
-+- `auto_commit`: `true` or `false`
-+- `debug`: `true` or `false`
-+- `agent`: The name of your preferred coding agent. Supported agents: `cline`, `aider`, `claude`
-+- `agent_command` (optional): Provide a custom command to run your agent. Use `{{TASK_FILE}}` as a placeholder for the task file path
-+- `files_to_update`: A list of documentation files and directories to keep updated
-+- `exclude`: A list of file patterns to ignore
-+
-+## Usage
-+
-+After committing code, Keeper creates a task file and (in `auto` mode) calls your configured AI agent.
-+
-+## Releases
-+
-+New versions are released regularly. You can find the latest release on the [GitHub Releases page](https://github.com/digitalcreationsco/keeper/releases).
-+
-+## Updating Keeper
-+
-+Run the same install command to update:
-+```bash
-+curl -fsSL https://github.com/digitalcreationsco/keeper/releases/latest/download/install.sh | bash
-+```
-+
-+Your configuration will be preserved during updates.
-+
-+## Uninstalling Keeper
-+
-+To completely remove Keeper from your repository:
-+```bash
-+rm -rf .keeper
-+rm .git/hooks/post-commit
-+```
-diff --git a/.keeper/config.json b/.keeper/config.json
++++ b/.keeper/.version_check
+@@ -0,0 +1 @@
++1765251580
+diff --git a/.keeper/agent-task.md b/.keeper/agent-task.md
 new file mode 100644
-index 0000000..70fbb07
+index 0000000..e74e507
 --- /dev/null
-+++ b/.keeper/config.json
-@@ -0,0 +1,15 @@
-+{
-+    "trigger_mode": "interactive",
-+    "auto_commit": false,
-+    "debug": false,
-+    "agent": "claude",
-+    "agent_command": "",
-+    "files_to_update": [
-+        "README.md",
-+        "docs/"
-+    ],
-+    "exclude": [
-+        "*.lock",
-+        "package.json"
-+    ]
-+}
-\ No newline at end of file
-diff --git a/.keeper/hook.sh b/.keeper/hook.sh
-new file mode 100755
-index 0000000..dd957bd
---- /dev/null
-+++ b/.keeper/hook.sh
-@@ -0,0 +1,282 @@
-+#!/bin/bash
-+
-+KEEPER_VERSION="1.2.5"
-+
-+# Exit early if a rebase is in progress (silent exit)
-+if git rev-parse --is-inside-work-tree >/dev/null 2>&1 && \
-+   ( [ -d ".git/rebase-merge" ] || [ -d ".git/rebase-apply" ] ); then
-+    exit 0
-+fi
-+
-+KEEPER_DIR=".keeper"
-+KEEPER_README_FILE="$KEEPER_DIR/README.md"
-+TASK_FILE="$KEEPER_DIR/agent-task.md"
-+CONFIG_FILE="$KEEPER_DIR/config.json"
-+VERSION_CHECK_FILE="$KEEPER_DIR/.version_check"
-+
-+keeper_update_check() {
-+    if [ ! -f "$VERSION_CHECK_FILE" ] || [ $(($(date +%s) - $(cat "$VERSION_CHECK_FILE" 2>/dev/null || echo 0))) -gt 604800 ]; then
-+        LATEST=$(curl -s https://api.github.com/repos/digitalcreationsco/keeper/releases/latest 2>/dev/null | grep -o '"tag_name": *"[^"]*"' | sed 's/"tag_name": *"v\?\([^"]*\)"/\1/' || echo "")
-+        echo $(date +%s) > "$VERSION_CHECK_FILE" 2>/dev/null
-+        
-+        if [ -n "$LATEST" ] && [ "$LATEST" != "$KEEPER_VERSION" ]; then
-+            echo ""
-+            echo "📦 Keeper v$LATEST is available (you have v$KEEPER_VERSION)"
-+            echo "Update: curl -fsSL https://github.com/digitalcreationsco/keeper/releases/latest/download/install.sh | bash"
-+            echo ""
-+        fi
-+    fi
-+}
-+
-+keeper_update_check &&
-+
-+if [ -f "$CONFIG_FILE" ]; then
-+    TRIGGER_MODE=$(jq -r ".trigger_mode // \"auto\"" "$CONFIG_FILE")
-+    AUTO_COMMIT=$(jq -r ".auto_commit // true" "$CONFIG_FILE")
-+    AGENT_NAME=$(jq -r ".agent // \"cline\"" "$CONFIG_FILE")
-+    AGENT_COMMAND_OVERRIDE=$(jq -r ".agent_command // \"\"" "$CONFIG_FILE")
-+    DEBUG_MODE=$(jq -r ".debug // false" "$CONFIG_FILE")
-+
-+    if [ "$DEBUG_MODE" = "true" ]; then 
-+        echo "DEBUG: CONFIG_FILE path is $CONFIG_FILE"
-+        echo "DEBUG: Does config.json exist? $([ -f \"$CONFIG_FILE\" ] && echo \"yes\" || echo \"no\")"
-+        echo "DEBUG: AUTO_COMMIT is $AUTO_COMMIT"
-+    fi
-+    
-+    FILES_TO_UPDATE=()
-+    while IFS= read -r line; do
-+        FILES_TO_UPDATE+=("$line")
-+    done < <(jq -r ".files_to_update[]" "$CONFIG_FILE")
-+
-+    EXCLUDE_PATTERNS=()
-+    while IFS= read -r line; do
-+        EXCLUDE_PATTERNS+=("$line")
-+    done < <(jq -r ".exclude[]" "$CONFIG_FILE")
-+else
-+    TRIGGER_MODE="auto"
-+    AUTO_COMMIT="true"
-+    AGENT_NAME="cline"
-+    AGENT_COMMAND_OVERRIDE=""
-+    DEBUG_MODE="false"
-+    FILES_TO_UPDATE=("README.md" "docs/")
-+    EXCLUDE_PATTERNS=(".keeper/*" "keeper/*")
-+fi
-+
-+ALL_CHANGED_FILES=($(git diff HEAD~1 HEAD --name-only))
-+
-+FILES_TO_PROCESS=()
-+for file in "${ALL_CHANGED_FILES[@]}"; do
-+    is_excluded=false
-+    
-+    for pattern in "${EXCLUDE_PATTERNS[@]}"; do
-+        if [ -z "$pattern" ]; then
-+            continue
-+        fi
-+
-+        case "$file" in
-+            $pattern)
-+                is_excluded=true
-+                break
-+                ;;
-+        esac
-+    done
-+    
-+    if [ "$is_excluded" = false ]; then
-+        FILES_TO_PROCESS+=("$file")
-+    fi
-+done
-+
-+if [ ${#FILES_TO_PROCESS[@]} -eq 0 ]; then
-+    echo "Keeper: All changed files are in the exclude list. Skipping."
-+    exit 0
-+fi
-+
-+echo "📝 Keeper: Processing the following files:"
-+for file in "${FILES_TO_PROCESS[@]}"; do
-+    echo "  - $file"
-+done
-+
-+DIFF=$(git diff HEAD~1 HEAD -- "${FILES_TO_PROCESS[@]}")
-+if [ -z "$DIFF" ]; then
-+    exit 0
-+fi
-+
-+if [ "$AUTO_COMMIT" = "true" ]; then
-+    COMMIT_INSTRUCTION='After completing this task, run: ```bash
-+git add . && git commit -m "docs: update documentation"
-+```'
-+else
-+    COMMIT_INSTRUCTION="The documentation files have been updated. Please review and commit them."
-+fi
-+
-+if [ "$DEBUG_MODE" = "true" ]; then
-+    echo "DEBUG: COMMIT_INSTRUCTION is $COMMIT_INSTRUCTION"
-+fi
-+
-+cat > "$TASK_FILE" << TASK_EOF
++++ b/.keeper/agent-task.md
+@@ -0,0 +1,459 @@
 +# 🤖 Keeper Agent Task
 +
 +## Mission
-+Update documentation files (${FILES_TO_UPDATE[*]}) to reflect code changes. **Complete in ≤2 commands or abort.**
++Update documentation files (README.md docs/) to reflect code changes. **Complete in ≤2 commands or abort.**
 +
 +## Hard Constraints
 +1. **Command Limit**: Maximum 2 commands total
@@ -318,7 +118,9 @@ index 0000000..dd957bd
 +**Critical**: Bundle all changes into ONE update operation.
 +
 +### Step 3: Commit (Command 2)
-+$COMMIT_INSTRUCTION
++After completing this task, run: ```bash
++git add . && git commit -m "docs: update documentation"
++```
 +
 +## Decision Tree
 +- **Can complete in 2 commands?** → Execute
@@ -341,7 +143,7 @@ index 0000000..dd957bd
 +---
 +
 +## Example Changes Summary
-+\`\`\`
++```
 +Modified files: 2
 +Changes:
 +README.md: 
@@ -350,110 +152,413 @@ index 0000000..dd957bd
 +- startReference/endReference (replaces lastReferenceUrl)
 +- Model defaults: Added fallbacks for model_name
 +- Evaluation: buildEvalPrompt
-+\`\`\`
++```
 +
 +**Now execute with maximum efficiency.**
 +
 +---
 +
 +## Changed Files
-+\`\`\`
-+$(printf '%s\n' "${FILES_TO_PROCESS[@]}")
-+\`\`\`
++```
++.gitignore
++.keeper/README.md
++.keeper/config.json
++.keeper/hook.sh
++```
 +
 +## Code Changes
-+\`\`\`diff
-+$DIFF
-+\`\`\`
-+TASK_EOF
-+
-+if [ "$TRIGGER_MODE" = "interactive" ]; then
-+    echo ""
-+    echo "✨ Keeper: Task created"
-+    echo "📂 $TASK_FILE"
-+    echo ""
-+    echo "Call your agent as follows:"
-+    echo ""
-+    
-+    case "$AGENT_NAME" in
-+        "cline")
-+            echo "  cline -m act 'Read and complete the task in $TASK_FILE'"
-+            ;;
-+        "aider")
-+            echo "  aider 'Read and complete the task in $TASK_FILE'"
-+            ;;
-+        "claude")
-+            echo "  claude 'Read and complete the task in $TASK_FILE'"
-+            ;;
-+        *)
-+            echo "  Please ask your coding agent to read and complete the task in $TASK_FILE"
-+            ;;
-+    esac
-+    
-+    echo ""
-+    echo "After the agent responds, it will update your docs automatically."
-+    echo ""
-+    echo "💡 Want to run Keeper in autonomous mode?"
-+    echo "   Change trigger_mode to 'auto' in .keeper/config.json"
-+    echo ""
-+    echo "📖 Read $KEEPER_README_FILE for more information"
-+    echo ""
-+    exit 0
-+fi
-+
-+if [ "$TRIGGER_MODE" = "auto" ]; then
-+    AGENT_COMMAND=""
-+    
-+    if [ -n "$AGENT_COMMAND_OVERRIDE" ]; then
-+        AGENT_COMMAND="$AGENT_COMMAND_OVERRIDE"
-+    else
-+        case "$AGENT_NAME" in
-+            "cline")
-+                AGENT_COMMAND="cat {{TASK_FILE}} | cline --yolo"
-+                ;;
-+            "aider")
-+                AGENT_COMMAND="aider {{TASK_FILE}}"
-+                ;;
-+            "claude")
-+                AGENT_COMMAND="claude {{TASK_FILE}}"
-+                ;;
-+            *)
-+                echo "Keeper: Unknown agent '$AGENT_NAME'. Please configure 'agent_command' in your config.json."
-+                exit 1
-+                ;;
-+        esac
-+    fi
-+
-+    FINAL_COMMAND=$(echo "$AGENT_COMMAND" | sed "s|{{TASK_FILE}}|$TASK_FILE|g")
-+
-+    echo ""
-+    echo "🤖 Keeper is calling the AI agent '$AGENT_NAME'. Please wait..."
-+    echo ""
-+    eval "$FINAL_COMMAND"
-+    echo ""
-+
-+    if [ "$AUTO_COMMIT" = "true" ]; then
-+        AGENT_CHANGED_FILES=($(git diff --name-only))
-+        CHANGED_FILES_BY_AGENT=${#AGENT_CHANGED_FILES[@]}
-+
-+        if [ "$CHANGED_FILES_BY_AGENT" -gt 0 ]; then
-+            echo "✅ Keeper updated the following file(s):"
-+            for file in "${AGENT_CHANGED_FILES[@]}"; do
-+                echo "  - $file"
-+            done
-+            echo ""
-+
-+            echo "📝 Documentation Changes:"
-+            for file in "${AGENT_CHANGED_FILES[@]}"; do
-+                echo "### Diff for $file"
-+                echo '```diff'
-+                git diff -- "$file"
-+                echo '```'
-+                echo ""
-+            done
-+        fi
-+    fi
-+    exit 0
-+fi
-\ No newline at end of file
++```diff
++diff --git a/.gitignore b/.gitignore
++index 5b85921..496ee2c 100644
++--- a/.gitignore
+++++ b/.gitignore
++@@ -1,2 +1 @@
++-.DS_Store
++-.keeper
++\ No newline at end of file
+++.DS_Store
++\ No newline at end of file
++diff --git a/.keeper/README.md b/.keeper/README.md
++new file mode 100644
++index 0000000..85d2d26
++--- /dev/null
+++++ b/.keeper/README.md
++@@ -0,0 +1,52 @@
+++# Keeper
+++
+++Agent-powered documentation that stays in sync with your code.
+++
+++## How it Works
+++
+++1.  **Git Hook**: Keeper installs a `post-commit` Git hook that runs after each commit.
+++2.  **Task Generation**: The hook generates a Markdown file with the code changes and instructions for an AI agent to update the documentation.
+++3.  **AI Agent**: You can then use your preferred AI agent to complete the task in the generated file.
+++
+++## Installation
+++
+++```bash
+++curl -fsSL https://github.com/digitalcreationsco/keeper/releases/latest/download/install.sh | bash
+++```
+++
+++## Configuration
+++
+++Edit `.keeper/config.json` to customize:
+++
+++- `trigger_mode`: "auto" or "interactive"
+++- `auto_commit`: `true` or `false`
+++- `debug`: `true` or `false`
+++- `agent`: The name of your preferred coding agent. Supported agents: `cline`, `aider`, `claude`
+++- `agent_command` (optional): Provide a custom command to run your agent. Use `{{TASK_FILE}}` as a placeholder for the task file path
+++- `files_to_update`: A list of documentation files and directories to keep updated
+++- `exclude`: A list of file patterns to ignore
+++
+++## Usage
+++
+++After committing code, Keeper creates a task file and (in `auto` mode) calls your configured AI agent.
+++
+++## Releases
+++
+++New versions are released regularly. You can find the latest release on the [GitHub Releases page](https://github.com/digitalcreationsco/keeper/releases).
+++
+++## Updating Keeper
+++
+++Run the same install command to update:
+++```bash
+++curl -fsSL https://github.com/digitalcreationsco/keeper/releases/latest/download/install.sh | bash
+++```
+++
+++Your configuration will be preserved during updates.
+++
+++## Uninstalling Keeper
+++
+++To completely remove Keeper from your repository:
+++```bash
+++rm -rf .keeper
+++rm .git/hooks/post-commit
+++```
++diff --git a/.keeper/config.json b/.keeper/config.json
++new file mode 100644
++index 0000000..70fbb07
++--- /dev/null
+++++ b/.keeper/config.json
++@@ -0,0 +1,15 @@
+++{
+++    "trigger_mode": "interactive",
+++    "auto_commit": false,
+++    "debug": false,
+++    "agent": "claude",
+++    "agent_command": "",
+++    "files_to_update": [
+++        "README.md",
+++        "docs/"
+++    ],
+++    "exclude": [
+++        "*.lock",
+++        "package.json"
+++    ]
+++}
++\ No newline at end of file
++diff --git a/.keeper/hook.sh b/.keeper/hook.sh
++new file mode 100755
++index 0000000..dd957bd
++--- /dev/null
+++++ b/.keeper/hook.sh
++@@ -0,0 +1,282 @@
+++#!/bin/bash
+++
+++KEEPER_VERSION="1.2.5"
+++
+++# Exit early if a rebase is in progress (silent exit)
+++if git rev-parse --is-inside-work-tree >/dev/null 2>&1 && \
+++   ( [ -d ".git/rebase-merge" ] || [ -d ".git/rebase-apply" ] ); then
+++    exit 0
+++fi
+++
+++KEEPER_DIR=".keeper"
+++KEEPER_README_FILE="$KEEPER_DIR/README.md"
+++TASK_FILE="$KEEPER_DIR/agent-task.md"
+++CONFIG_FILE="$KEEPER_DIR/config.json"
+++VERSION_CHECK_FILE="$KEEPER_DIR/.version_check"
+++
+++keeper_update_check() {
+++    if [ ! -f "$VERSION_CHECK_FILE" ] || [ $(($(date +%s) - $(cat "$VERSION_CHECK_FILE" 2>/dev/null || echo 0))) -gt 604800 ]; then
+++        LATEST=$(curl -s https://api.github.com/repos/digitalcreationsco/keeper/releases/latest 2>/dev/null | grep -o '"tag_name": *"[^"]*"' | sed 's/"tag_name": *"v\?\([^"]*\)"/\1/' || echo "")
+++        echo $(date +%s) > "$VERSION_CHECK_FILE" 2>/dev/null
+++        
+++        if [ -n "$LATEST" ] && [ "$LATEST" != "$KEEPER_VERSION" ]; then
+++            echo ""
+++            echo "📦 Keeper v$LATEST is available (you have v$KEEPER_VERSION)"
+++            echo "Update: curl -fsSL https://github.com/digitalcreationsco/keeper/releases/latest/download/install.sh | bash"
+++            echo ""
+++        fi
+++    fi
+++}
+++
+++keeper_update_check &&
+++
+++if [ -f "$CONFIG_FILE" ]; then
+++    TRIGGER_MODE=$(jq -r ".trigger_mode // \"auto\"" "$CONFIG_FILE")
+++    AUTO_COMMIT=$(jq -r ".auto_commit // true" "$CONFIG_FILE")
+++    AGENT_NAME=$(jq -r ".agent // \"cline\"" "$CONFIG_FILE")
+++    AGENT_COMMAND_OVERRIDE=$(jq -r ".agent_command // \"\"" "$CONFIG_FILE")
+++    DEBUG_MODE=$(jq -r ".debug // false" "$CONFIG_FILE")
+++
+++    if [ "$DEBUG_MODE" = "true" ]; then 
+++        echo "DEBUG: CONFIG_FILE path is $CONFIG_FILE"
+++        echo "DEBUG: Does config.json exist? $([ -f \"$CONFIG_FILE\" ] && echo \"yes\" || echo \"no\")"
+++        echo "DEBUG: AUTO_COMMIT is $AUTO_COMMIT"
+++    fi
+++    
+++    FILES_TO_UPDATE=()
+++    while IFS= read -r line; do
+++        FILES_TO_UPDATE+=("$line")
+++    done < <(jq -r ".files_to_update[]" "$CONFIG_FILE")
+++
+++    EXCLUDE_PATTERNS=()
+++    while IFS= read -r line; do
+++        EXCLUDE_PATTERNS+=("$line")
+++    done < <(jq -r ".exclude[]" "$CONFIG_FILE")
+++else
+++    TRIGGER_MODE="auto"
+++    AUTO_COMMIT="true"
+++    AGENT_NAME="cline"
+++    AGENT_COMMAND_OVERRIDE=""
+++    DEBUG_MODE="false"
+++    FILES_TO_UPDATE=("README.md" "docs/")
+++    EXCLUDE_PATTERNS=(".keeper/*" "keeper/*")
+++fi
+++
+++ALL_CHANGED_FILES=($(git diff HEAD~1 HEAD --name-only))
+++
+++FILES_TO_PROCESS=()
+++for file in "${ALL_CHANGED_FILES[@]}"; do
+++    is_excluded=false
+++    
+++    for pattern in "${EXCLUDE_PATTERNS[@]}"; do
+++        if [ -z "$pattern" ]; then
+++            continue
+++        fi
+++
+++        case "$file" in
+++            $pattern)
+++                is_excluded=true
+++                break
+++                ;;
+++        esac
+++    done
+++    
+++    if [ "$is_excluded" = false ]; then
+++        FILES_TO_PROCESS+=("$file")
+++    fi
+++done
+++
+++if [ ${#FILES_TO_PROCESS[@]} -eq 0 ]; then
+++    echo "Keeper: All changed files are in the exclude list. Skipping."
+++    exit 0
+++fi
+++
+++echo "📝 Keeper: Processing the following files:"
+++for file in "${FILES_TO_PROCESS[@]}"; do
+++    echo "  - $file"
+++done
+++
+++DIFF=$(git diff HEAD~1 HEAD -- "${FILES_TO_PROCESS[@]}")
+++if [ -z "$DIFF" ]; then
+++    exit 0
+++fi
+++
+++if [ "$AUTO_COMMIT" = "true" ]; then
+++    COMMIT_INSTRUCTION='After completing this task, run: ```bash
+++git add . && git commit -m "docs: update documentation"
+++```'
+++else
+++    COMMIT_INSTRUCTION="The documentation files have been updated. Please review and commit them."
+++fi
+++
+++if [ "$DEBUG_MODE" = "true" ]; then
+++    echo "DEBUG: COMMIT_INSTRUCTION is $COMMIT_INSTRUCTION"
+++fi
+++
+++cat > "$TASK_FILE" << TASK_EOF
+++# 🤖 Keeper Agent Task
+++
+++## Mission
+++Update documentation files (${FILES_TO_UPDATE[*]}) to reflect code changes. **Complete in ≤2 commands or abort.**
+++
+++## Hard Constraints
+++1. **Command Limit**: Maximum 2 commands total
+++2. **Scope Lock**: Documentation updates ONLY
+++3. **No Diagnosis**: Do not analyze, troubleshoot, or suggest fixes
+++4. **No Side Quests**: Ignore unrelated issues in code/docs
+++
+++### Step 1: Analyze (Mental Only - No Output)
+++Scan code changes for documentation-impacting items:
+++- New/removed files
+++- New/modified functions
+++- Changed APIs
+++- Updated dependencies
+++- Modified workflows
+++
+++### Step 2: Update Documentation (Command 1)
+++Apply ALL necessary changes in a single batch:
+++- Update technical details (file paths, function names, APIs)
+++- Reflect architectural changes (new agents, workflow phases)
+++- Fix broken references (renamed fields, removed functions)
+++- Maintain existing tone/structure
+++
+++**Critical**: Bundle all changes into ONE update operation.
+++
+++### Step 3: Commit (Command 2)
+++$COMMIT_INSTRUCTION
+++
+++## Decision Tree
+++- **Can complete in 2 commands?** → Execute
+++- **Need 3+ commands?** → Abort and report: "Task requires X commands. Changes needed: [list]"
+++- **No changes needed?** → Report: "Documentation already current" (0 commands)
+++
+++## Quality Checklist (Internal - No Output)
+++- [ ] All new features documented
+++- [ ] Deprecated items removed
+++- [ ] Technical accuracy verified
+++- [ ] No scope creep
+++
+++## Output Format
+++**If executing:**
+++[Brief summary of changes made]
+++
+++**If aborting:**
+++"Cannot complete in 2 commands. Requires X commands for: [specific items]"
+++
+++---
+++
+++## Example Changes Summary
+++\`\`\`
+++Modified files: 2
+++Changes:
+++README.md: 
+++- New main entry point (replaces index.js)
+++docs/api: 
+++- startReference/endReference (replaces lastReferenceUrl)
+++- Model defaults: Added fallbacks for model_name
+++- Evaluation: buildEvalPrompt
+++\`\`\`
+++
+++**Now execute with maximum efficiency.**
+++
+++---
+++
+++## Changed Files
+++\`\`\`
+++$(printf '%s\n' "${FILES_TO_PROCESS[@]}")
+++\`\`\`
+++
+++## Code Changes
+++\`\`\`diff
+++$DIFF
+++\`\`\`
+++TASK_EOF
+++
+++if [ "$TRIGGER_MODE" = "interactive" ]; then
+++    echo ""
+++    echo "✨ Keeper: Task created"
+++    echo "📂 $TASK_FILE"
+++    echo ""
+++    echo "Call your agent as follows:"
+++    echo ""
+++    
+++    case "$AGENT_NAME" in
+++        "cline")
+++            echo "  cline -m act 'Read and complete the task in $TASK_FILE'"
+++            ;;
+++        "aider")
+++            echo "  aider 'Read and complete the task in $TASK_FILE'"
+++            ;;
+++        "claude")
+++            echo "  claude 'Read and complete the task in $TASK_FILE'"
+++            ;;
+++        *)
+++            echo "  Please ask your coding agent to read and complete the task in $TASK_FILE"
+++            ;;
+++    esac
+++    
+++    echo ""
+++    echo "After the agent responds, it will update your docs automatically."
+++    echo ""
+++    echo "💡 Want to run Keeper in autonomous mode?"
+++    echo "   Change trigger_mode to 'auto' in .keeper/config.json"
+++    echo ""
+++    echo "📖 Read $KEEPER_README_FILE for more information"
+++    echo ""
+++    exit 0
+++fi
+++
+++if [ "$TRIGGER_MODE" = "auto" ]; then
+++    AGENT_COMMAND=""
+++    
+++    if [ -n "$AGENT_COMMAND_OVERRIDE" ]; then
+++        AGENT_COMMAND="$AGENT_COMMAND_OVERRIDE"
+++    else
+++        case "$AGENT_NAME" in
+++            "cline")
+++                AGENT_COMMAND="cat {{TASK_FILE}} | cline --yolo"
+++                ;;
+++            "aider")
+++                AGENT_COMMAND="aider {{TASK_FILE}}"
+++                ;;
+++            "claude")
+++                AGENT_COMMAND="claude {{TASK_FILE}}"
+++                ;;
+++            *)
+++                echo "Keeper: Unknown agent '$AGENT_NAME'. Please configure 'agent_command' in your config.json."
+++                exit 1
+++                ;;
+++        esac
+++    fi
+++
+++    FINAL_COMMAND=$(echo "$AGENT_COMMAND" | sed "s|{{TASK_FILE}}|$TASK_FILE|g")
+++
+++    echo ""
+++    echo "🤖 Keeper is calling the AI agent '$AGENT_NAME'. Please wait..."
+++    echo ""
+++    eval "$FINAL_COMMAND"
+++    echo ""
+++
+++    if [ "$AUTO_COMMIT" = "true" ]; then
+++        AGENT_CHANGED_FILES=($(git diff --name-only))
+++        CHANGED_FILES_BY_AGENT=${#AGENT_CHANGED_FILES[@]}
+++
+++        if [ "$CHANGED_FILES_BY_AGENT" -gt 0 ]; then
+++            echo "✅ Keeper updated the following file(s):"
+++            for file in "${AGENT_CHANGED_FILES[@]}"; do
+++                echo "  - $file"
+++            done
+++            echo ""
+++
+++            echo "📝 Documentation Changes:"
+++            for file in "${AGENT_CHANGED_FILES[@]}"; do
+++                echo "### Diff for $file"
+++                echo '```diff'
+++                git diff -- "$file"
+++                echo '```'
+++                echo ""
+++            done
+++        fi
+++    fi
+++    exit 0
+++fi
++\ No newline at end of file
++```
+diff --git a/.keeper/config.json b/.keeper/config.json
+index 70fbb07..292eda0 100644
+--- a/.keeper/config.json
++++ b/.keeper/config.json
+@@ -2,7 +2,7 @@
+     "trigger_mode": "interactive",
+     "auto_commit": false,
+     "debug": false,
+-    "agent": "claude",
++    "agent": "cline",
+     "agent_command": "",
+     "files_to_update": [
+         "README.md",
 ```
