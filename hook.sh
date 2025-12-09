@@ -8,6 +8,17 @@ if git rev-parse --is-inside-work-tree >/dev/null 2>&1 && \
     exit 0
 fi
 
+# Exit if we're in the middle of a merge
+if [ -f ".git/MERGE_HEAD" ]; then
+    exit 0
+fi
+
+# Prevent recursive hook calls
+if [ -n "$KEEPER_RUNNING" ]; then
+    exit 0
+fi
+export KEEPER_RUNNING=1
+
 KEEPER_DIR=".keeper"
 KEEPER_README_FILE="$KEEPER_DIR/README.md"
 TASK_FILE="$KEEPER_DIR/agent-task.md"
@@ -28,11 +39,11 @@ keeper_update_check() {
     fi
 }
 
-keeper_update_check &&
+keeper_update_check &
 
 if [ -f "$CONFIG_FILE" ]; then
-    TRIGGER_MODE=$(jq -r ".trigger_mode // \"auto\"" "$CONFIG_FILE")
-    AUTO_COMMIT=$(jq -r ".auto_commit // true" "$CONFIG_FILE")
+    TRIGGER_MODE=$(jq -r ".trigger_mode // \"interactive\"" "$CONFIG_FILE")
+    AUTO_COMMIT=$(jq -r ".auto_commit // false" "$CONFIG_FILE")
     AGENT_NAME=$(jq -r ".agent // \"cline\"" "$CONFIG_FILE")
     AGENT_COMMAND_OVERRIDE=$(jq -r ".agent_command // \"\"" "$CONFIG_FILE")
     DEBUG_MODE=$(jq -r ".debug // false" "$CONFIG_FILE")
@@ -53,8 +64,8 @@ if [ -f "$CONFIG_FILE" ]; then
         EXCLUDE_PATTERNS+=("$line")
     done < <(jq -r ".exclude[]" "$CONFIG_FILE")
 else
-    TRIGGER_MODE="auto"
-    AUTO_COMMIT="true"
+    TRIGGER_MODE="interactive"
+    AUTO_COMMIT="false"
     AGENT_NAME="cline"
     AGENT_COMMAND_OVERRIDE=""
     DEBUG_MODE="false"
@@ -62,7 +73,8 @@ else
     EXCLUDE_PATTERNS=(".keeper/*" "keeper/*")
 fi
 
-ALL_CHANGED_FILES=($(git diff HEAD~1 HEAD --name-only))
+# Use git show to safely get the diff from the last commit
+ALL_CHANGED_FILES=($(git diff-tree --no-commit-id --name-only -r HEAD))
 
 FILES_TO_PROCESS=()
 for file in "${ALL_CHANGED_FILES[@]}"; do
@@ -87,7 +99,9 @@ for file in "${ALL_CHANGED_FILES[@]}"; do
 done
 
 if [ ${#FILES_TO_PROCESS[@]} -eq 0 ]; then
-    echo "Keeper: All changed files are in the exclude list. Skipping."
+    if [ "$DEBUG_MODE" = "true" ]; then
+        echo "Keeper: All changed files are in the exclude list. Skipping."
+    fi
     exit 0
 fi
 
@@ -96,7 +110,8 @@ for file in "${FILES_TO_PROCESS[@]}"; do
     echo "  - $file"
 done
 
-DIFF=$(git diff HEAD~1 HEAD -- "${FILES_TO_PROCESS[@]}")
+# Use git show to get the diff safely
+DIFF=$(git diff-tree --no-commit-id -p -r HEAD -- "${FILES_TO_PROCESS[@]}")
 if [ -z "$DIFF" ]; then
     exit 0
 fi
@@ -254,29 +269,16 @@ if [ "$TRIGGER_MODE" = "auto" ]; then
     echo ""
     echo "🤖 Keeper is calling the AI agent '$AGENT_NAME'. Please wait..."
     echo ""
+    
+    # Run agent command
     eval "$FINAL_COMMAND"
+    
     echo ""
-
-    if [ "$AUTO_COMMIT" = "true" ]; then
-        AGENT_CHANGED_FILES=($(git diff --name-only))
-        CHANGED_FILES_BY_AGENT=${#AGENT_CHANGED_FILES[@]}
-
-        if [ "$CHANGED_FILES_BY_AGENT" -gt 0 ]; then
-            echo "✅ Keeper updated the following file(s):"
-            for file in "${AGENT_CHANGED_FILES[@]}"; do
-                echo "  - $file"
-            done
-            echo ""
-
-            echo "📝 Documentation Changes:"
-            for file in "${AGENT_CHANGED_FILES[@]}"; do
-                echo "### Diff for $file"
-                echo '```diff'
-                git diff -- "$file"
-                echo '```'
-                echo ""
-            done
-        fi
-    fi
+    echo "✅ Agent execution complete"
+    echo ""
+    
+    # Note: The agent should handle the commit itself
+    # We don't check for changes here to avoid git conflicts
+    
     exit 0
 fi
