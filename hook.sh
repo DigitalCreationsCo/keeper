@@ -140,7 +140,7 @@ cat > "$TASK_FILE" << TASK_EOF
 Update documentation files to reflect recent code changes.
 
 ## Documentation Files to Update
-$(printf '- %s\n' "${FILES_TO_UPDATE[@]}")
+$(for f in "${FILES_TO_UPDATE[@]}"; do echo "- $f"; done)
 
 ## Instructions
 1. Read the code changes below carefully

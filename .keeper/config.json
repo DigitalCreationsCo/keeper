@@ -2,7 +2,7 @@
     "trigger_mode": "auto",
     "auto_commit": true,
     "debug": false,
-    "agent": "claude",
+    "agent": "cline",
     "agent_command": "",
     "files_to_update": [
         "README.md",
