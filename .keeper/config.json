@@ -1,16 +1,9 @@
 {
-    "trigger_mode": "auto",
-    "auto_commit": true,
-    "debug": false,
-    "agent": "cline",
-    "agent_command": "",
-    "files_to_update": [
-        "README.md",
-        "docs/"
-    ],
-    "exclude": [
-        ".keeper/*",
-        "*.lock",
-        "package.json"
-    ]
+  "trigger_mode": "auto",
+  "auto_commit": true,
+  "debug": false,
+  "agent": "cline",
+  "agent_command": "",
+  "files_to_update": ["README.md","docs/"],
+  "exclude": [".keeper/*","*.lock","package.json"]
 }
