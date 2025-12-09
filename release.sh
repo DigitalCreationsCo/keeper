@@ -1,16 +1,10 @@
-git add .
-git commit -m "release: $VERSION"
+# 1. Update version
+npm version patch
 
-git tag -a $VERSION -m "Release $VERSION"
-git push origin main
-git push origin $VERSION
+# 2. Push tag
+git push origin main --tags
 
-# 4. Create GitHub Release
-# - Go to Releases → Draft new release
-# - Tag: v1.1.0
-# - Upload: install.sh, hook.sh, config.json, etc.
-# - Publish
-
-# 5. Users automatically get latest version via:
-# /releases/latest/download/install.sh
-# ```
+# 3. GitHub Actions automatically:
+#    - Builds all files with correct version
+#    - Creates release
+#    - Uploads: install.sh, hook.sh, config.json, README.md

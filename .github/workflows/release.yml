@@ -1,0 +1,119 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Get version from package.json
+        id: get_version
+        run: |
+          VERSION=$(jq -r .version package.json)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Building release for version $VERSION"
+
+      - name: Build release artifacts
+        run: |
+          mkdir -p dist
+          VERSION="${{ steps.get_version.outputs.version }}"
+          
+          echo "🔨 Building install.sh with version $VERSION..."
+          sed "s/{{VERSION}}/$VERSION/g" install.sh > dist/install.sh
+          chmod +x dist/install.sh
+          
+          echo "🔨 Building hook.sh with version $VERSION..."
+          sed "s/{{VERSION}}/$VERSION/g" hook.sh > dist/hook.sh
+          chmod +x dist/hook.sh
+          
+          echo "📋 Copying static files..."
+          cp config.json dist/config.json
+          cp README.md dist/README.md
+          
+          echo "✅ Build complete!"
+          echo "📦 Release contents:"
+          ls -lh dist/
+
+      - name: Verify build
+        run: |
+          echo "🔍 Verifying version in built files..."
+          VERSION="${{ steps.get_version.outputs.version }}"
+          
+          if grep -q "KEEPER_VERSION=\"$VERSION\"" dist/install.sh; then
+            echo "✅ install.sh has correct version: $VERSION"
+          else
+            echo "❌ install.sh version mismatch!"
+            exit 1
+          fi
+          
+          if grep -q "KEEPER_VERSION=\"$VERSION\"" dist/hook.sh; then
+            echo "✅ hook.sh has correct version: $VERSION"
+          else
+            echo "❌ hook.sh version mismatch!"
+            exit 1
+          fi
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/install.sh
+            dist/hook.sh
+            dist/config.json
+            dist/README.md
+          body: |
+            ## Keeper ${{ steps.get_version.outputs.version }}
+            
+            ### Installation
+            ```bash
+            curl -fsSL https://github.com/${{ github.repository }}/releases/latest/download/install.sh | bash
+            ```
+            
+            ### Files Included
+            - `install.sh` - Installation script
+            - `hook.sh` - Git hook script
+            - `config.json` - Default configuration
+            - `README.md` - Documentation
+            
+            ### What's Changed
+            See the commit history for details.
+            
+            ### Full Changelog
+            **Full Changelog**: https://github.com/${{ github.repository }}/compare/${{ github.event.before }}...${{ github.ref_name }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Summary
+        run: |
+          echo "## 🎉 Release Published!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ steps.get_version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Tag:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Installation Command" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "curl -fsSL https://github.com/${{ github.repository }}/releases/latest/download/install.sh | bash" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Release Assets" >> $GITHUB_STEP_SUMMARY
+          echo "- install.sh" >> $GITHUB_STEP_SUMMARY
+          echo "- hook.sh" >> $GITHUB_STEP_SUMMARY
+          echo "- config.json" >> $GITHUB_STEP_SUMMARY
+          echo "- README.md" >> $GITHUB_STEP_SUMMARY
