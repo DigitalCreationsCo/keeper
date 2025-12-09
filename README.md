@@ -18,8 +18,8 @@ curl -fsSL https://github.com/digitalcreationsco/keeper/releases/latest/download
 
 Edit `.keeper/config.json` to customize:
 
-- `trigger_mode`: "auto" or "interactive"
-- `auto_commit`: `true` or `false`
+- `trigger_mode`: "interactive" or "auto"
+- `auto_commit`: `false` or `true`
 - `debug`: `true` or `false`
 - `agent`: The name of your preferred coding agent. Supported agents: `cline`, `aider`, `claude`
 - `agent_command` (optional): Provide a custom command to run your agent. Use `{{TASK_FILE}}` as a placeholder for the task file path
@@ -28,7 +28,7 @@ Edit `.keeper/config.json` to customize:
 
 ## Usage
 
-After committing code, Keeper creates a task file and (in `auto` mode) calls your configured AI agent.
+After committing code, Keeper creates a task file and (in `interactive` mode) waits for you to call your configured AI agent.
 
 ## Releases
 
