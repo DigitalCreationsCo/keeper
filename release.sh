@@ -4,7 +4,7 @@ git commit -m "release: $VERSION" --allow-empty
 
 # 2. Push tag
 git tag -a "$VERSION" -m "Release $VERSION"
-git push origin main --tags -f
+git push origin main --tags
 
 # 3. GitHub Actions automatically:
 #    - Builds all files with correct version
