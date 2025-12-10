@@ -1,6 +1,6 @@
 #!/bin/bash
 
-KEEPER_VERSION="{{VERSION}}"
+KEEPER_VERSION="1.2.8"
 
 # Exit early if a rebase is in progress (silent exit)
 if git rev-parse --is-inside-work-tree >/dev/null 2>&1 && \
@@ -210,13 +210,13 @@ if [ "$TRIGGER_MODE" = "auto" ]; then
     else
         case "$AGENT_NAME" in
             "cline")
-                AGENT_COMMAND="cat {{TASK_FILE}} | cline --yolo"
+                AGENT_COMMAND="cline --yolo -m \"Read and complete the task in $TASK_FILE\""
                 ;;
             "aider")
-                AGENT_COMMAND="aider {{TASK_FILE}}"
+                AGENT_COMMAND="aider --yes --message \"Read and complete the task in $TASK_FILE\""
                 ;;
             "claude")
-                AGENT_COMMAND="claude {{TASK_FILE}}"
+                AGENT_COMMAND="claude --message \"Read and complete the task in $TASK_FILE\""
                 ;;
             *)
                 echo "Keeper: Unknown agent '$AGENT_NAME'. Please configure 'agent_command' in your config.json."
