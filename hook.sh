@@ -152,9 +152,7 @@ $(for f in "${FILES_TO_UPDATE[@]}"; do echo "- $f"; done)
    - Updated installation or usage instructions
 3. Maintain the existing tone and structure of the documentation
 4. Be concise but complete
-
-## Next Steps
-$COMMIT_INSTRUCTION
+5. $COMMIT_INSTRUCTION
 
 ---
 
