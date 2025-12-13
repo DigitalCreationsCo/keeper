@@ -68,7 +68,7 @@ if [ -f "$CONFIG_FILE" ]; then
 else
     TRIGGER_MODE="interactive"
     AUTO_COMMIT="false"
-    AGENT_NAME="claude"
+    AGENT_NAME=""
     AGENT_COMMAND_OVERRIDE=""
     DEBUG_MODE="false"
     FILES_TO_UPDATE=("README.md" "docs/")
@@ -175,23 +175,27 @@ if [ "$TRIGGER_MODE" = "interactive" ]; then
     echo "✨ Keeper: Task created"
     echo "📂 $TASK_FILE"
     echo ""
-    echo "Call your agent using the following command:"
+    echo "Call your agent using the command:"
     echo ""
     
-    case "$AGENT_NAME" in
-        "cline")
-            echo "cline --yolo -m act 'Read and complete the task in $TASK_FILE'"
-            ;;
-        "aider")
-            echo "aider 'Read and complete the task in $TASK_FILE'"
-            ;;
-        "claude")
-            echo "claude 'Read and complete the task in $TASK_FILE'"
-            ;;
-        *)
-            echo "Read and complete the task in $TASK_FILE"
-            ;;
-    esac
+    if [ -z "$AGENT_NAME" ]; then
+        echo "Read and complete the task in $TASK_FILE"
+    else
+        case "$AGENT_NAME" in
+            "cline")
+                echo "cline --yolo -m act 'Read and complete the task in $TASK_FILE'"
+                ;;
+            "aider")
+                echo "aider 'Read and complete the task in $TASK_FILE'"
+                ;;
+            "claude")
+                echo "claude 'Read and complete the task in $TASK_FILE'"
+                ;;
+            *)
+                echo "Read and complete the task in $TASK_FILE"
+                ;;
+        esac
+    fi
     
     echo ""
     echo "After the agent responds, it will update your docs automatically."
@@ -212,16 +216,20 @@ if [ "$TRIGGER_MODE" = "auto" ]; then
     else
         case "$AGENT_NAME" in
             "cline")
-                AGENT_COMMAND="cat {{TASK_FILE}} | cline --yolo"
+                AGENT_COMMAND="cat $TASK_FILE | cline --yolo"
                 ;;
             "aider")
-                AGENT_COMMAND="aider {{TASK_FILE}}"
+                AGENT_COMMAND="aider $TASK_FILE"
                 ;;
             "kilocode")
-                AGENT_COMMAND="kilocode --auto {{TASK_FILE}}"
+                AGENT_COMMAND="kilocode --auto $TASK_FILE"
                 ;;
             "claude")
-                AGENT_COMMAND="claude {{TASK_FILE}}"
+                AGENT_COMMAND="claude $TASK_FILE"
+                ;;
+            "")
+                echo "Keeper: No agent configured. Please set 'agent' in your config.json."
+                exit 1
                 ;;
             *)
                 echo "Keeper: Unknown agent '$AGENT_NAME'. Please configure 'agent_command' in your config.json."
@@ -234,7 +242,7 @@ if [ "$TRIGGER_MODE" = "auto" ]; then
     if [ -n "$AGENT_COMMAND_OVERRIDE" ]; then
         echo "🤖 Running $AGENT_COMMAND_OVERRIDE. Please wait..."
     else
-        echo "🤖 Keeper is calling the AI agent $AGENT_NAME. Please wait..."
+        echo "🤖 Keeper is calling the AI agent. Please wait..."
     fi
     echo ""
     
