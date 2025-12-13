@@ -44,7 +44,7 @@ keeper_update_check &&
 if [ -f "$CONFIG_FILE" ]; then
     TRIGGER_MODE=$(jq -r ".trigger_mode // \"interactive\"" "$CONFIG_FILE")
     AUTO_COMMIT=$(jq -r ".auto_commit // false" "$CONFIG_FILE")
-    AGENT_NAME=$(jq -r ".agent // \"cline\"" "$CONFIG_FILE")
+    AGENT_NAME=$(jq -r ".agent // \"\"" "$CONFIG_FILE")
     AGENT_COMMAND_OVERRIDE=$(jq -r ".agent_command // \"\"" "$CONFIG_FILE")
     DEBUG_MODE=$(jq -r ".debug // false" "$CONFIG_FILE")
 
@@ -53,6 +53,7 @@ if [ -f "$CONFIG_FILE" ]; then
         echo "DEBUG: Does config.json exist? $([ -f \"$CONFIG_FILE\" ] && echo \"yes\" || echo \"no\")"
         echo "DEBUG: AUTO_COMMIT is $AUTO_COMMIT"
         echo "DEBUG: TRIGGER_MODE is $TRIGGER_MODE"
+        echo "DEBUG: AGENT_NAME is $AGENT_NAME"
     fi
     
     FILES_TO_UPDATE=()
@@ -67,7 +68,7 @@ if [ -f "$CONFIG_FILE" ]; then
 else
     TRIGGER_MODE="interactive"
     AUTO_COMMIT="false"
-    AGENT_NAME="cline"
+    AGENT_NAME="claude"
     AGENT_COMMAND_OVERRIDE=""
     DEBUG_MODE="false"
     FILES_TO_UPDATE=("README.md" "docs/")
@@ -152,6 +153,11 @@ $(for f in "${FILES_TO_UPDATE[@]}"; do echo "- $f"; done)
 3. Maintain the existing tone and structure of the documentation
 4. Be concise but complete
 
+## Next Steps
+$COMMIT_INSTRUCTION
+
+---
+
 ## Changed Files
 \`\`\`
 $(printf '%s\n' "${FILES_TO_PROCESS[@]}")
@@ -162,10 +168,6 @@ $(printf '%s\n' "${FILES_TO_PROCESS[@]}")
 $DIFF
 \`\`\`
 
----
-
-## Next Steps
-$COMMIT_INSTRUCTION
 TASK_EOF
 
 if [ "$TRIGGER_MODE" = "interactive" ]; then
@@ -173,21 +175,21 @@ if [ "$TRIGGER_MODE" = "interactive" ]; then
     echo "✨ Keeper: Task created"
     echo "📂 $TASK_FILE"
     echo ""
-    echo "Call your agent as follows:"
+    echo "Call your agent using the following command:"
     echo ""
     
     case "$AGENT_NAME" in
         "cline")
-            echo "  cline -m act 'Read and complete the task in $TASK_FILE'"
+            echo "cline --yolo -m act 'Read and complete the task in $TASK_FILE'"
             ;;
         "aider")
-            echo "  aider 'Read and complete the task in $TASK_FILE'"
+            echo "aider 'Read and complete the task in $TASK_FILE'"
             ;;
         "claude")
-            echo "  claude 'Read and complete the task in $TASK_FILE'"
+            echo "claude 'Read and complete the task in $TASK_FILE'"
             ;;
         *)
-            echo "  Please ask your coding agent to read and complete the task in $TASK_FILE"
+            echo "Read and complete the task in $TASK_FILE"
             ;;
     esac
     
@@ -215,6 +217,9 @@ if [ "$TRIGGER_MODE" = "auto" ]; then
             "aider")
                 AGENT_COMMAND="aider {{TASK_FILE}}"
                 ;;
+            "kilocode")
+                AGENT_COMMAND="kilocode --auto {{TASK_FILE}}"
+                ;;
             "claude")
                 AGENT_COMMAND="claude {{TASK_FILE}}"
                 ;;
@@ -226,7 +231,11 @@ if [ "$TRIGGER_MODE" = "auto" ]; then
     fi
 
     echo ""
-    echo "🤖 Keeper is calling the AI agent '$AGENT_NAME'. Please wait..."
+    if [ -n "$AGENT_COMMAND_OVERRIDE" ]; then
+        echo "🤖 Running $AGENT_COMMAND_OVERRIDE. Please wait..."
+    else
+        echo "🤖 Keeper is calling the AI agent $AGENT_NAME. Please wait..."
+    fi
     echo ""
     
     if [ "$DEBUG_MODE" = "true" ]; then

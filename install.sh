@@ -43,7 +43,7 @@ if [ -n "$EXISTING_CONFIG" ]; then
     # Extract existing values from memory
     EXISTING_TRIGGER_MODE=$(echo "$EXISTING_CONFIG" | jq -r ".trigger_mode // \"interactive\"")
     EXISTING_AUTO_COMMIT=$(echo "$EXISTING_CONFIG" | jq -r ".auto_commit // false")
-    EXISTING_AGENT=$(echo "$EXISTING_CONFIG" | jq -r ".agent // \"cline\"")
+    EXISTING_AGENT=$(echo "$EXISTING_CONFIG" | jq -r ".agent // \"\"")
     EXISTING_AGENT_COMMAND=$(echo "$EXISTING_CONFIG" | jq -r ".agent_command // \"\"")
     EXISTING_DEBUG=$(echo "$EXISTING_CONFIG" | jq -r ".debug // false")
     
