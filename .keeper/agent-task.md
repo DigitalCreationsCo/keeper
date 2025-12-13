@@ -28,23 +28,25 @@ git commit -m "docs: update documentation"
 
 ## Changed Files
 ```
-docs/index.html
+hook.sh
 ```
 
 ## Code Changes
 ```diff
-diff --git a/docs/index.html b/docs/index.html
-index b88a3aa..43a8283 100644
---- a/docs/index.html
-+++ b/docs/index.html
-@@ -295,7 +295,7 @@
-         </header>
+diff --git a/hook.sh b/hook.sh
+index 9382ae6..bd992c7 100644
+--- a/hook.sh
++++ b/hook.sh
+@@ -152,9 +152,7 @@ $(for f in "${FILES_TO_UPDATE[@]}"; do echo "- $f"; done)
+    - Updated installation or usage instructions
+ 3. Maintain the existing tone and structure of the documentation
+ 4. Be concise but complete
+-
+-## Next Steps
+-$COMMIT_INSTRUCTION
++5. $COMMIT_INSTRUCTION
  
-         <div class="install-section">
--            <h2 class="install-title">Quick Install <span class="version-badge">v1.3.0</span></h2>
-+            <h2 class="install-title">Quick Install <span class="version-badge">v1.3.1</span></h2>
-             <div class="command-box">
-                 <code
-                     id="install-command">curl -fsSL https://github.com/digitalcreationsco/keeper/releases/latest/download/install.sh | bash</code>
+ ---
+ 
 ```
 

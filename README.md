@@ -28,7 +28,7 @@ Edit `.keeper/config.json` to customize:
 
 ## Usage
 
-After committing code, Keeper creates a task file and (in `interactive` mode) waits for you to call your configured AI agent.
+After committing code, Keeper creates a task file and (in `interactive` mode) waits for you to call your configured AI agent. The agent will update documentation and then execute the required commit command provided in the task file.
 
 ## Releases
 
